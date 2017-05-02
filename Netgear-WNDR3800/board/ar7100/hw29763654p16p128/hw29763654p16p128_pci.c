@@ -48,6 +48,8 @@ static uint32_t ar7100_config_addr(uint8_t bus_num, uint16_t devfn, int where);
 static uint32_t local_byte_lane_enable_bits(uint32_t n, int size);
 static int  ar7100_local_read_config(int where, int size, uint32_t *value);
 static int  ar7100_local_write_config(int where, int size, uint32_t value);
+static int  ar7100_pci_read_config(struct pci_controller *hose, pci_dev_t dev, int offset, u32* value);
+static int  ar7100_pci_write_config(struct pci_controller *hose, pci_dev_t dev, int offset, u32 value);
 
 /*
 ** This is where the merlin devices in slot 0 and 1 are initialized.
