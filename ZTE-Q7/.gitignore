@@ -1,0 +1,15 @@
+*.o
+*.a
+.depend
+
+.config.old
+.menuconfig.log
+autoconf.h
+System.map
+u-boot
+u-boot.map
+u-boot.srec
+uboot.img
+
+scripts/lxdialog/lxdialog
+tools/mkimage
