@@ -12,8 +12,6 @@
 #define BBU_MODE		// BBU SPI flash controller
 #define MORE_BUF_MODE
 
-#define GPIO6_TO_SPI_CS
-
 #if !defined USER_MODE && !defined COMMAND_MODE && !defined BBU_MODE
 #error "Please choose the correct mode of SPI flash controller"
 #endif
@@ -443,14 +441,6 @@ static int bbu_mb_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_
 	/* step 0. enable more byte mode */
 	ra_or(SPI_REG_MASTER, (1 << 2));
 
-	ra_or(SPI_REG_MASTER, (1 << 29)); //cs1 enabled
-	ra_and(RT2880_GPIOMODE_REG, ~(3 << 16)); //spi mode
-#ifdef GPIO6_TO_SPI_CS
-	ra_or(RT2880_GPIOMODE_REG, (1 << 3)); //uart3 as GPIO mode
-	RALINK_REG(RT2880_REG_PIODIR)  |= 1<<6; //output mode
-	RALINK_REG(RT2880_REG_PIORESET)|= 1<<6; //pull low
-#endif
-
 	bbu_spic_busy_wait();
 
 	/* step 1. set opcode & address, and fix cmd bit count to 32 (or 40) */
@@ -518,10 +508,6 @@ static int bbu_mb_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_
 RET_MB_TRANS:
 	/* step #. disable more byte mode */
 	ra_and(SPI_REG_MASTER, ~(1 << 2));
-	ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //nand mode
-#ifdef GPIO6_TO_SPI_CS
-	RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 	return rc;
 }
 #endif // MORE_BUF_MODE //
@@ -530,13 +516,6 @@ static int bbu_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_t n
 {
 	u32 reg;
 
-	ra_or(SPI_REG_MASTER, (1 << 29)); //change to spi_cs1
-	ra_and(RT2880_GPIOMODE_REG, ~(3 << 16)); //change to spi mode
-#ifdef GPIO6_TO_SPI_CS
-	ra_or(RT2880_GPIOMODE_REG, (1 << 3)); //uart3 as GPIO mode
-	RALINK_REG(RT2880_REG_PIODIR)  |= 1<<6; //output mode
-	RALINK_REG(RT2880_REG_PIORESET)|= 1<<6; //pull low
-#endif
 	bbu_spic_busy_wait();
 
 	/* step 1. set opcode & address */
@@ -551,10 +530,6 @@ static int bbu_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_t n
 	if (flag & SPIC_WRITE_BYTES) {
 		if (buf == NULL) {
 			printf("%s: write null buf\n", __func__);
-			ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand mode
-#ifdef GPIO6_TO_SPI_CS
-			RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 			return -1;
 		}
 		ra_outl(SPI_REG_DATA0, 0);
@@ -571,10 +546,6 @@ static int bbu_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_t n
 			break;
 		default:
 			printf("%s: fixme, write of length %d\n", __func__, n_tx);
-			ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand
-#ifdef GPIO6_TO_SPI_CS
-			RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 			return -1;
 		}
 	}
@@ -592,22 +563,13 @@ static int bbu_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_t n
 
 	/* step 5. wait spi_master_busy */
 	bbu_spic_busy_wait();
-	if (flag & SPIC_WRITE_BYTES) {
-		ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand
-#ifdef GPIO6_TO_SPI_CS
-		RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
+	if (flag & SPIC_WRITE_BYTES)
 		return 0;
-	}
 
 	/* step 6. read DI/DO data #0 */
 	if (flag & SPIC_READ_BYTES) {
 		if (buf == NULL) {
 			printf("%s: read null buf\n", __func__);
-			ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand
-#ifdef GPIO6_TO_SPI_CS
-			RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 			return -1;
 		}
 		reg = ra_inl(SPI_REG_DATA0);
@@ -623,18 +585,9 @@ static int bbu_spic_trans(const u8 code, const u32 addr, u8 *buf, const size_t n
 			break;
 		default:
 			printf("%s: fixme, read of length %d\n", __func__, n_rx);
-			ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand
-#ifdef GPIO6_TO_SPI_CS
-			RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 			return -1;
 		}
 	}
-	
-	ra_or(RT2880_GPIOMODE_REG, (2 << 16)); //change to nand
-#ifdef GPIO6_TO_SPI_CS
-	RALINK_REG(RT2880_REG_PIOSET)  |= (1<<6); //pull high
-#endif
 	return 0;
 }
 #endif // BBU_MODE //

@@ -2305,7 +2305,7 @@ void setup_internal_gsw(void)
 	mii_mgr_write(31, 0x7a74, 0x44);  //lower driving
 	mii_mgr_write(31, 0x7a7c, 0x44);  //lower driving
 
-#if 0
+#if 1
 	for(i=0;i<=4;i++) 
 	{	
 	       //turn on PHY

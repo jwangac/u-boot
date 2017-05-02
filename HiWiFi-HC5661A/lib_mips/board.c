@@ -2055,11 +2055,6 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	}
 #endif /* CONFIG_FACTORY_RESET */
 
-	if (reset_on)
-		setenv("bootargs", CONFIG_FACTORY_RESET_BOOTARGS);
-	else
-		setenv("bootargs", CONFIG_BOOTARGS);
-
 /*config bootdelay via environment parameter: bootdelay */
 	{
 	    char * s;
@@ -2098,7 +2093,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 
 	if(BootType == '3') {
 		char *argv[2];
-		sprintf(addr_str, "0x%X", ubnt_get_kern_addr());
+		sprintf(addr_str, "0x%X", CFG_KERN_ADDR);
 		argv[1] = &addr_str[0];
 		printf("   \n3: System Boot system code via Flash.\n");
 		do_bootm(cmdtp, 0, 2, argv);

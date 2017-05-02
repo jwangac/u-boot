@@ -94,27 +94,19 @@ extern unsigned int  CFG_BLOCKSIZE;
 
 #define CONFIG_BOOTDELAY	5	/* autoboot after 5 seconds	*/
 
-#define CONFIG_BAUDRATE		57600
+#define CONFIG_BAUDRATE		115200
 
-#define CONFIG_SERVERIP 10.10.10.3
-#define CONFIG_IPADDR 10.10.10.123
+#define CONFIG_SERVERIP 192.168.1.2
+#define CONFIG_IPADDR 192.168.1.1
 #define CONFIG_ETHADDR "00:AA:BB:CC:DD:10"
 /* valid baudrates */
 #define CFG_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 //#define	CONFIG_TIMESTAMP		/* Print image info with timestamp */
 
-#define CONFIG_BOOTARGS "console=ttyS1,57600n8 ubi.mtd=7 root=ubi0_0 rootfstype=ubifs rootsqimg=squashfs.img rootsqwdir=w rw"
+#undef  CONFIG_BOOTARGS
 
 #define CONFIG_BOOTCOMMAND	"tftp" //"run flash_self"
-
-#define CONFIG_FACTORY_RESET
-#define CONFIG_FACTORY_RESET_TIME      3
-#define CONFIG_FACTORY_RESET_BOOTARGS  CONFIG_BOOTARGS " resetsqimg"
-#if defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD) 
-#define RALINK_REG_PIODATA      (RALINK_PIO_BASE + 0x20)
-#define RALINK_REG_PIODIR       (RALINK_PIO_BASE + 0x00)
-#endif
 
 #include <cmd_confdefs.h>
 
@@ -318,7 +310,6 @@ extern unsigned int  CFG_BLOCKSIZE;
 #define CFG_ETH_LINK_UP_TOUT	(5 * CFG_HZ) /* Timeout for Flash Write */
 #define CFG_FLASH_STATE_DISPLAY_TOUT  (2 * CFG_HZ) /* Timeout for Flash Write */
 
-#if 0
 #if defined (ON_BOARD_32M_FLASH_COMPONENT) && !defined (DUAL_IMAGE_SUPPORT)
 #define CFG_BOOTLOADER_SIZE	0x40000
 #define CFG_CONFIG_SIZE		0x20000
@@ -351,16 +342,6 @@ extern unsigned int  CFG_BLOCKSIZE;
 #define CFG_KERN2_ADDR		(CFG_FLASH2_BASE + (CFG_BOOTLOADER_SIZE + CFG_CONFIG_SIZE + CFG_FACTORY_SIZE))
 #endif
 #endif
-#endif
-#define CFG_BOOTLOADER_SIZE	0x80000
-#define CFG_CONFIG_SIZE		0x60000
-#define CFG_FACTORY_SIZE	0x60000
-#define CFG_KERN_SIZE		0x300000
-#define CFG_KERN2_SIZE		CFG_KERN_SIZE
-#define CFG_ENV_ADDR		(CFG_FLASH_BASE + CFG_BOOTLOADER_SIZE)
-#define CFG_FACTORY_ADDR	(CFG_ENV_ADDR + CFG_CONFIG_SIZE)
-#define CFG_KERN_ADDR		(CFG_FACTORY_ADDR + CFG_FACTORY_SIZE)
-#define CFG_KERN2_ADDR		(CFG_KERN_ADDR + CFG_KERN_SIZE)
 
 #define CFG_ENV_SECT_SIZE	CFG_CONFIG_SIZE
 #define CFG_ENV_SIZE		0x1000
@@ -504,8 +485,5 @@ extern unsigned int  CFG_BLOCKSIZE;
 #if defined (MT7621_ASIC_BOARD) || defined (MT7621_FPGA_BOARD)
 //#define USE_PIO_DBG		1
 #endif
-
-#define CONFIG_MISC_INIT_R
-#define CONFIG_ENV_OVERWRITE
 
 #endif	/* __CONFIG_H */
