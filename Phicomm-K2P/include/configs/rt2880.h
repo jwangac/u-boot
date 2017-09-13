@@ -331,7 +331,7 @@ extern unsigned int  CFG_BLOCKSIZE;
 #else
 #define CFG_BOOTLOADER_SIZE	0x30000
 #define CFG_CONFIG_SIZE		0x10000
-#define CFG_FACTORY_SIZE	0x10000
+#define CFG_FACTORY_SIZE	0x60000
 #endif
 #endif
 
