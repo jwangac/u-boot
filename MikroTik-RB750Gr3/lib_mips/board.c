@@ -1293,7 +1293,6 @@ u_long read_gpio()
 extern u32 mii_mgr_read(u32 phy_addr, u32 phy_register, u32 *read_data);
 extern u32 mii_mgr_write(u32 phy_addr, u32 phy_register, u32 write_data);
 extern int last_port_id;
-extern int factory_reset_gpio;
 
 #define last_led_reg_bit_on(reg) \
 { \
@@ -1311,51 +1310,12 @@ extern int factory_reset_gpio;
 	mii_mgr_write(0x1f, reg, val); \
 }
 
-static void _set_led(int val)
-{
-	switch (val) {
-	case 0:
-		last_led_reg_bit_off(0x7d04);
-		last_led_reg_bit_on(0x7d10);
-		last_led_reg_bit_on(0x7d14);
-		last_led_reg_bit_off(0x7d18);
-		break;
-	case 1:
-		last_led_reg_bit_off(0x7d04);
-		last_led_reg_bit_on(0x7d10);
-		last_led_reg_bit_on(0x7d14);
-		last_led_reg_bit_on(0x7d18);
-		break;
-	case 2:
-		last_led_reg_bit_on(0x7d04);
-		break;
-	default:
-		return;
-	}
-}
-
 void board_blink_led(int ms)
 {
         int i;
         for (i = 0; i < (ms / 125); i++) {
-                _set_led(i % 2);
                 udelay(125000);
         }
-}
-
-void board_set_led_on()
-{
-        _set_led(0);
-}
-
-void board_set_led_off()
-{
-        _set_led(1);
-}
-
-void board_set_led_normal()
-{
-        _set_led(2);
 }
 
 #endif /* CONFIG_FACTORY_RESET */
@@ -2028,10 +1988,9 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 #endif
 
 	/* Detect power-on reset */
-	extern int ubnt_bd_valid;
 	int reset_on = 0;
+	int factory_reset_gpio = 18;
 #ifdef CONFIG_FACTORY_RESET
-	if (ubnt_bd_valid) {
 		for (rcount = 0; rcount <= CONFIG_FACTORY_RESET_TIME; rcount++) {
 			rreg = read_gpio();
 			if (rreg & (1 << factory_reset_gpio)) {
@@ -2045,14 +2004,8 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		}
 		if (rcount == (CONFIG_FACTORY_RESET_TIME + 1)) {
 			printf("...Confirmed\n""Starting with factory-default config...\n");
-			board_set_led_on();
-			udelay(2000000);
-			board_set_led_off();
-			udelay(1000000);
 			reset_on = 1;
 		}
-		board_set_led_normal();
-	}
 #endif /* CONFIG_FACTORY_RESET */
 
 /*config bootdelay via environment parameter: bootdelay */
@@ -2069,6 +2022,11 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		memset(s1, 0, 2);
 		*s1 = BootType;
 		setenv("BootType", s1);
+	}
+
+	if (reset_on) {
+		BootType = '2';
+		auto_load = 1;
 	}
 
 	OperationSelect();   
@@ -2120,12 +2078,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 
 		case '2':
 			printf("   \n%d: System Load Linux Kernel then write to Flash via TFTP. \n", SEL_LOAD_LINUX_WRITE_FLASH);
-			printf(" Warning!! Erase Linux in Flash then burn new one. Are you sure?(Y/N)\n");
-			confirm = getc();
-			if (confirm != 'y' && confirm != 'Y') {
-				printf(" Operation terminated\n");
-				break;
-			}
+			printf(" Warning!! Erase Linux in Flash then burn new one.");
 			tftp_config(SEL_LOAD_LINUX_WRITE_FLASH, argv);
 			argc= 3;
 			setenv("autostart", "no");

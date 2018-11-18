@@ -108,6 +108,13 @@ extern unsigned int  CFG_BLOCKSIZE;
 
 #define CONFIG_BOOTCOMMAND	"tftp" //"run flash_self"
 
+#define CONFIG_FACTORY_RESET
+#define CONFIG_FACTORY_RESET_TIME 3
+#if defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD)
+#define RALINK_REG_PIODATA (RALINK_PIO_BASE + 0x20)
+#define RALINK_REG_PIODIR (RALINK_PIO_BASE + 0x00)
+#endif
+
 #include <cmd_confdefs.h>
 
 /*
