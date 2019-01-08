@@ -9,10 +9,10 @@ Netgear and Ubiquiti Networks.
 
 Devices
 =======
-| Model | Booting OpenWrt | Recovery using serial  | Recovery using reset button |
+| Model | Booting mainstream OpenWrt | Recovery using serial  | Recovery using reset button |
 |:--- | :--- | :--- | :--- |
 | HiWiFi HC5661A | Yes | Yes | No |
-| MikroTik RB750Gr3 | Yes | Yes | Yes |
+| MikroTik RB750Gr3 | No | Yes | Yes |
 | Netgear WNDR3800 | Yes | Yes | Yes |
 | Phicomm K2P | Yes | Yes, but untested | No |
 | ZBT WE1326 | Yes | Yes | No |
