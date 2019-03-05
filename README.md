@@ -15,5 +15,6 @@ Devices
 | MikroTik RB750Gr3 | No | Yes | Yes |
 | Netgear WNDR3800 | Yes | Yes | Yes |
 | Phicomm K2P | Yes | Yes, but untested | No |
+| Xzwifi CreativeBox | Yes | Yes, but untested | Yes |
 | ZBT WE1326 | Yes | Yes | No |
 | ZTE Q7 | Yes | Yes | No |
