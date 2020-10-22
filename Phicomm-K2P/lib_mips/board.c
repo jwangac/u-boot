@@ -54,7 +54,7 @@ int modifies= 0;
 #endif
 #define ARGV_LEN  128
 
-#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)	
+#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 static int watchdog_reset();
 #endif
 
@@ -62,7 +62,7 @@ extern int timer_init(void);
 
 extern void  rt2880_eth_halt(struct eth_device* dev);
 
-extern void setup_internal_gsw(void); 
+extern void setup_internal_gsw(void);
 //extern void pci_init(void);
 
 extern int incaip_set_cpuclk(void);
@@ -77,7 +77,7 @@ extern void input_value(u8 *str);
 #if defined (RT6855_ASIC_BOARD) || defined (RT6855_FPGA_BOARD) || \
     defined (MT7620_ASIC_BOARD) || defined (MT7620_FPGA_BOARD)
 extern void rt_gsw_init(void);
-#elif defined (RT6855A_ASIC_BOARD) || defined (RT6855A_FPGA_BOARD) 
+#elif defined (RT6855A_ASIC_BOARD) || defined (RT6855A_FPGA_BOARD)
 extern void rt6855A_gsw_init(void);
 #elif defined (RT3883_ASIC_BOARD) && defined (MAC_TO_MT7530_MODE)
 extern void rt3883_gsw_init(void);
@@ -140,8 +140,8 @@ static void Init_System_Mode(void)
 #endif
 
 	reg = RALINK_REG(RT2880_SYSCFG_REG);
-		
-	/* 
+
+	/*
 	 * CPU_CLK_SEL (bit 21:20)
 	 */
 #ifdef RT2880_FPGA_BOARD
@@ -162,7 +162,7 @@ static void Init_System_Mode(void)
 #elif defined (MT7621_FPGA_BOARD)
 	mips_cpu_feq = 50 * 1000 *1000;
 	mips_bus_feq = mips_cpu_feq/4;
-#elif defined (RT2883_ASIC_BOARD) 
+#elif defined (RT2883_ASIC_BOARD)
 	clk_sel = (reg>>20) & 0x03;
 	switch(clk_sel) {
 		case 0:
@@ -180,7 +180,7 @@ static void Init_System_Mode(void)
 	}
 	mips_bus_feq = mips_cpu_feq/2;
 #elif defined(RT3052_ASIC_BOARD)
-#if defined(RT3350_ASIC_BOARD) 
+#if defined(RT3350_ASIC_BOARD)
 	//MA10 is floating
 	mips_cpu_feq = (320*1000*1000);
 #else
@@ -238,11 +238,11 @@ static void Init_System_Mode(void)
 		if ((reg & (1 << 9)) != 0)
 			mips_cpu_feq = (560*1000*1000);
 		else {
-			if ((reg & (1 << 26)) != 0)	
+			if ((reg & (1 << 26)) != 0)
 				mips_cpu_feq = (560*1000*1000);
 			else
 				mips_cpu_feq = (420*1000*1000);
-		}	
+		}
 		mips_bus_feq = (140*1000*1000);
 	} else { /* DDR */
 		if ((reg & (1 << 9)) != 0) {
@@ -321,7 +321,7 @@ static void Init_System_Mode(void)
 		mips_cpu_feq = (500 * (reg & 0x1F) / ((reg >> 8) & 0x1F)) * 1000 * 1000;
 	}
 	mips_bus_feq = mips_cpu_feq/4;
-#elif defined (RT3883_ASIC_BOARD) 
+#elif defined (RT3883_ASIC_BOARD)
 	clk_sel = (reg>>8) & 0x03;
 	switch(clk_sel) {
 		case 0:
@@ -432,7 +432,7 @@ static void Init_System_Mode(void)
 		case 3:
 			mips_cpu_feq = (280*1000*1000);
 			break;
-		
+
 		#endif
 	}
 	mips_bus_feq = mips_cpu_feq/2;
@@ -443,7 +443,7 @@ static void Init_System_Mode(void)
 	/* in general, the spec define 8192 refresh cycles/64ms
 	 * 64ms/8192 = 7.8us
 	 * 7.8us * 106.7Mhz(SDRAM clock) = 832
-	 * the value of refresh cycle shall smaller than 832. 
+	 * the value of refresh cycle shall smaller than 832.
 	 * so we config it at 0x300 (suggested by ASIC)
 	 */
 #if defined(ON_BOARD_SDR) && defined(ON_BOARD_256M_DRAM_COMPONENT) && (!defined(MT7620_ASIC_BOARD))
@@ -453,7 +453,7 @@ static void Init_System_Mode(void)
 	tREF &= 0xffff0000;
 #if defined(ASIC_BOARD)
 	tREF |= 0x00000300;
-#elif defined(FPGA_BOARD) 
+#elif defined(FPGA_BOARD)
 	tREF |= 0x000004B;
 #else
 #error "not exist"
@@ -508,11 +508,11 @@ static int init_func_ram (void)
 #ifdef RALINK_DDR_OPTIMIZATION
 #ifdef ON_BOARD_DDR2
 /*optimize ddr parameter*/
-{	
+{
 	u32 tDDR;
 	tDDR = RALINK_REG(DDR_CFG0_REG);
 
-        tDDR &= 0xf0780000; 
+        tDDR &= 0xf0780000;
 	tDDR |=  RAS_VALUE << RAS_OFFSET;
 	tDDR |=  TRFC_VALUE << TRFC_OFFSET;
 	tDDR |=  TRFI_VALUE << TRFI_OFFSET;
@@ -524,7 +524,7 @@ static int init_func_ram (void)
 
 	if ((gd->ram_size = initdram (board_type)) > 0) {
 		print_size (gd->ram_size, "\n");
-		return (0);  
+		return (0);
 	}
 	puts ("*** failed ***\n");
 
@@ -533,7 +533,7 @@ static int init_func_ram (void)
 
 static int display_banner(void)
 {
-   
+
 	printf ("\n\n%s\n\n", version_string);
 	return (0);
 }
@@ -550,7 +550,7 @@ static int init_baudrate (void)
 {
 	//uchar tmp[64]; /* long enough for environment variables */
 	//int i = getenv_r ("baudrate", tmp, sizeof (tmp));
-	//kaiker 
+	//kaiker
 	gd->baudrate = CONFIG_BAUDRATE;
 /*
 	gd->baudrate = (i > 0)
@@ -597,11 +597,11 @@ init_fnc_t *init_sequence[] = {
 };
 #endif
 
-//  
+//
 __attribute__((nomips16)) void board_init_f(ulong bootflag)
 {
 	gd_t gd_data, *id;
-	bd_t *bd;  
+	bd_t *bd;
 	//init_fnc_t **init_fnc_ptr;
 	ulong addr, addr_sp, len = (ulong)&uboot_end - CFG_MONITOR_BASE;
 	ulong *s;
@@ -613,21 +613,21 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	value = le32_to_cpu(*(volatile u_long *)(RALINK_SPI_BASE + 0x10));
 	value &= ~(0x7);
 	value |= 0x2;
-	*(volatile u_long *)(RALINK_SPI_BASE + 0x10) = cpu_to_le32(value);	
+	*(volatile u_long *)(RALINK_SPI_BASE + 0x10) = cpu_to_le32(value);
 #elif defined MT7621_FPGA_BOARD || defined MT7628_FPGA_BOARD
 	value = le32_to_cpu(*(volatile u_long *)(RALINK_SPI_BASE + 0x3c));
 	value &= ~(0xFFF);
-	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);	
+	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);
 #elif defined MT7621_ASIC_BOARD
 	value = le32_to_cpu(*(volatile u_long *)(RALINK_SPI_BASE + 0x3c));
 	value &= ~(0xFFF);
 	value |= 5; //work-around 3-wire SPI issue (3 for RFB, 5 for EVB)
-	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);	
+	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);
 #elif  defined MT7628_ASIC_BOARD
 	value = le32_to_cpu(*(volatile u_long *)(RALINK_SPI_BASE + 0x3c));
 	value &= ~(0xFFF);
 	value |= 8;
-	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);	
+	*(volatile u_long *)(RALINK_SPI_BASE + 0x3c) = cpu_to_le32(value);
 #endif
 
 #if defined(MT7620_FPGA_BOARD) || defined(MT7620_ASIC_BOARD)
@@ -642,7 +642,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 		value |= (step&0x1F);
 		RALINK_REG(RT2880_SYSCLKCFG_REG) = value;
 		udelay(10);
-	};	
+	};
 #elif defined(MT7628_ASIC_BOARD)
 	value = RALINK_REG(RALINK_DYN_CFG0_REG);
 	fdiv = (unsigned long)((value>>8)&0x0F);
@@ -651,7 +651,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	else
 		frac = CPU_FRAC_DIV;
 	i = 0;
-	
+
 	while(frac < fdiv) {
 		value = RALINK_REG(RALINK_DYN_CFG0_REG);
 		fdiv = ((value>>8)&0x0F);
@@ -664,7 +664,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 		value = RALINK_REG(RALINK_DYN_CFG0_REG);
 		fdiv = ((value>>8)&0x0F);
 		//frac = (unsigned long)(value&0x0F);
-	}	
+	}
 #elif defined (MT7621_ASIC_BOARD)
 #if (MT7621_CPU_FREQUENCY!=50)
 	value = RALINK_REG(RALINK_CUR_CLK_STS_REG);
@@ -672,7 +672,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	frac = (unsigned long)(value&0x1F);
 
 	i = 0;
-	
+
 	while(frac < fdiv) {
 		value = RALINK_REG(RALINK_DYN_CFG0_REG);
 		fdiv = ((value>>8)&0x0F);
@@ -686,19 +686,19 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 		fdiv = ((value>>8)&0x1F);
 		frac = (unsigned long)(value&0x1F);
 	}
-	
+
 #endif
 #if ((MT7621_CPU_FREQUENCY!=50) && (MT7621_CPU_FREQUENCY!=500))
 	//change CPLL from GPLL to MEMPLL
 	value = RALINK_REG(RALINK_CLKCFG0_REG);
 	value &= ~(0x3<<30);
 	value |= (0x1<<30);
-	RALINK_REG(RALINK_CLKCFG0_REG) = value;	
+	RALINK_REG(RALINK_CLKCFG0_REG) = value;
 #endif
 #endif
 
 #ifdef CONFIG_PURPLE
-	void copy_code (ulong); 
+	void copy_code (ulong);
 #endif
 	//*pio_mode = 0xFFFF;
 
@@ -707,11 +707,11 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	gd = &gd_data;
 	/* compiler optimization barrier needed for GCC >= 3.4 */
 	__asm__ __volatile__("": : :"memory");
-	
-		
+
+
 	memset ((void *)gd, 0, sizeof (gd_t));
 
-#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)	
+#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 	watchdog_reset();
 #endif
 	timer_init();
@@ -722,11 +722,11 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	display_banner();		/* say that we are here */
 	checkboard();
 
-	init_func_ram(); 
+	init_func_ram();
 
 	/* reset Frame engine */
 	value = le32_to_cpu(*(volatile u_long *)(RALINK_SYSCTL_BASE + 0x0034));
-	udelay(100);    
+	udelay(100);
 #if defined (RT2880_FPGA_BOARD) || defined (RT2880_ASIC_BOARD)
 	value |= (1 << 18);
 #elif defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD)
@@ -736,7 +736,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	//2880 -> 3052 reset Frame Engine from 18 to 21
 	value |= (1 << 21);
 #endif
-	*(volatile u_long *)(RALINK_SYSCTL_BASE + 0x0034) = cpu_to_le32(value);	
+	*(volatile u_long *)(RALINK_SYSCTL_BASE + 0x0034) = cpu_to_le32(value);
 #if defined (RT2880_FPGA_BOARD) || defined (RT2880_ASIC_BOARD)
 	value &= ~(1 << 18);
 #elif defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD)
@@ -744,18 +744,18 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 #else
 	value &= ~(1 << 21);
 #endif
-	*(volatile u_long *)(RALINK_SYSCTL_BASE + 0x0034) = cpu_to_le32(value);	
-	udelay(200);      
+	*(volatile u_long *)(RALINK_SYSCTL_BASE + 0x0034) = cpu_to_le32(value);
+	udelay(200);
 
-#if 0	
+#if 0
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
-	
+
 		if ((*init_fnc_ptr)() != 0) {
 			hang ();
 		}
 	}
 #endif
-#ifdef DEBUG	
+#ifdef DEBUG
 	debug("rt2880 uboot %s %s\n", VERSION, DATE);
 #endif
 
@@ -767,9 +767,9 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 
 	/* We can reserve some RAM "on top" here.
 	 */
-#ifdef DEBUG	    
+#ifdef DEBUG
 	debug ("SERIAL_CLOCK_DIVISOR =%d \n", SERIAL_CLOCK_DIVISOR);
-	debug ("kaiker,,CONFIG_BAUDRATE =%d \n", CONFIG_BAUDRATE); 
+	debug ("kaiker,,CONFIG_BAUDRATE =%d \n", CONFIG_BAUDRATE);
 	debug ("SDRAM SIZE:%08X\n",gd->ram_size);
 #endif
 
@@ -778,8 +778,8 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 	addr &= ~(4096 - 1);
 #ifdef DEBUG
 	debug ("Top of RAM usable for U-Boot at: %08lx\n", addr);
-#endif	 
-   
+#endif
+
 	/* Reserve memory for U-Boot code, data & bss
 	 * round down to next 16 kB limit
 	 */
@@ -854,12 +854,12 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 
 
 #if defined(CFG_RUN_CODE_IN_RAM)
-	/* 
+	/*
 	 * tricky: relocate code to original TEXT_BASE
-	 * for ICE souce level debuggind mode 
-	 */	
+	 * for ICE souce level debuggind mode
+	 */
 	debug ("relocate_code Pointer at: %08lx\n", addr);
-	relocate_code (addr_sp, id, /*TEXT_BASE*/ addr);	
+	relocate_code (addr_sp, id, /*TEXT_BASE*/ addr);
 #else
 	debug ("relocate_code Pointer at: %08lx\n", addr);
 	relocate_code (addr_sp, id, addr);
@@ -931,8 +931,8 @@ int tftp_config(int type, char *argv[])
 	if (strcmp(default_ip, srvip) != 0)
 		modifies++;
 
-	if(type == SEL_LOAD_BOOT_SDRAM 
-			|| type == SEL_LOAD_BOOT_WRITE_FLASH 
+	if(type == SEL_LOAD_BOOT_SDRAM
+			|| type == SEL_LOAD_BOOT_WRITE_FLASH
 #ifdef RALINK_UPGRADE_BY_SERIAL
 			|| type == SEL_LOAD_BOOT_WRITE_FLASH_BY_SERIAL
 #endif
@@ -1007,11 +1007,11 @@ void trigger_hw_reset(void)
 
 #ifdef DUAL_IMAGE_SUPPORT
 
-/* 
+/*
  * dir=1: Image1 to Image2
  * dir=2: Image2 to Image1
  */
-int copy_image(int dir, unsigned long image_size) 
+int copy_image(int dir, unsigned long image_size)
 {
 	int ret = 0;
 #ifdef CFG_ENV_IS_IN_FLASH
@@ -1122,10 +1122,10 @@ int check_image_validation(void)
 	image_header_t hdr1, hdr2;
 	unsigned char *hdr1_addr, *hdr2_addr;
 	char *stable, *try;
-	
+
 	hdr1_addr = (unsigned char *)CFG_KERN_ADDR;
 	hdr2_addr = (unsigned char *)CFG_KERN2_ADDR;
-	
+
 #if defined (CFG_ENV_IS_IN_NAND)
 	ranand_read((char *)&hdr1, (unsigned int)hdr1_addr - CFG_FLASH_BASE, sizeof(image_header_t));
 	ranand_read(char *)(&hdr2, (unsigned int)hdr2_addr - CFG_FLASH_BASE, sizeof(image_header_t));
@@ -1242,7 +1242,7 @@ int check_image_validation(void)
 	printf("Image1 Stable Flag --> %s\n", !strcmp(stable, "1") ? "Stable" : "Not stable");
 	try = getenv("Image1Try");
 	printf("Image1 Try Counter --> %s\n", (try == NULL) ? "0" : try);
-	if ((strcmp(stable, "1") != 0) && (simple_strtoul(try, NULL, 10)) > MAX_TRY_TIMES 
+	if ((strcmp(stable, "1") != 0) && (simple_strtoul(try, NULL, 10)) > MAX_TRY_TIMES
 		&& (broken1 == 0)) {
 		printf("\nImage1 is not stable and try counter > %X. Take it as a broken image.", MAX_TRY_TIMES);
 		broken1 = 1;
@@ -1371,7 +1371,7 @@ void board_set_led_normal()
  */
 
 gd_t gd_data;
- 
+
 __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 {
 	cmd_tbl_t *cmdtp;
@@ -1404,7 +1404,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	gd = (gd_t *)(CFG_SDRAM_BASE + DRAM_SIZE*0x100000- 0x10000);//&gd_data;
 #endif
 #ifdef CONFIG_FACTORY_RESET
-	int rcount = 0; 
+	int rcount = 0;
 	uint64_t rreg;
 #endif /* CONFIG_FACTORY_RESET */
 
@@ -1453,9 +1453,9 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	Init_System_Mode(); /*  Get CPU rate */
 
 #if defined(MT7628_ASIC_BOARD)	/* Enable WLED share pin */
-	RALINK_REG(RALINK_SYSCTL_BASE+0x3C)|= (1<<8);	
+	RALINK_REG(RALINK_SYSCTL_BASE+0x3C)|= (1<<8);
 	RALINK_REG(RALINK_SYSCTL_BASE+0x64)&= ~((0x3<<16)|(0x3));
-#endif	
+#endif
 #if defined(RT3052_ASIC_BOARD) || defined(RT3352_ASIC_BOARD) || defined(RT5350_ASIC_BOARD)
 	//turn on all Ethernet LEDs around 0.5sec.
 #if 0
@@ -1516,9 +1516,9 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	gd->reloc_off = dest_addr - CFG_MONITOR_BASE;
 
 	monitor_flash_len = (ulong)&uboot_end_data - dest_addr;
-#ifdef DEBUG	
+#ifdef DEBUG
 	debug("\n monitor_flash_len =%d \n",monitor_flash_len);
-#endif	
+#endif
 	/*
 	 * We have to relocate the command table manually
 	 */
@@ -1565,7 +1565,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		printf("ra_nand_init fail\n");
 		while(1);
 	}
-#endif	
+#endif
 	bd->bi_flashstart = 0;
 	bd->bi_flashsize = size;
 	bd->bi_flashoffset = 0;
@@ -1602,8 +1602,8 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	}
 
 	// reset MIPS now also reset Andes
-	RALINK_REG(RALINK_SYSCTL_BASE+0x38)|= 0x200;	
-#endif	
+	RALINK_REG(RALINK_SYSCTL_BASE+0x38)|= 0x200;
+#endif
 	/* initialize malloc() area */
 	mem_malloc_init();
 	malloc_bin_reloc();
@@ -1677,7 +1677,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	/* RT2880 Boot Loader Menu */
 #if defined(RT3352_FPGA_BOARD) || defined (RT3352_ASIC_BOARD) || \
     defined(RT3883_FPGA_BOARD) || defined (RT3883_ASIC_BOARD) || \
-    defined(RT5350_FPGA_BOARD) || defined (RT5350_ASIC_BOARD) 
+    defined(RT5350_FPGA_BOARD) || defined (RT5350_ASIC_BOARD)
 
 #if defined(CFG_ENV_IS_IN_SPI) || defined (CFG_ENV_IS_IN_NAND)
 	{
@@ -1696,18 +1696,18 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		    printf("TOTAL_MEMORY_SIZE: %d MBytes\n", DRAM_SIZE);
 		}else{
 		int dram_width, is_ddr2, dram_total_width, total_size;
-		int _x = ((reg >> 12) & 0x7); 
+		int _x = ((reg >> 12) & 0x7);
 
 #if defined(RT3352_FPGA_BOARD) || defined (RT3352_ASIC_BOARD)
 		int dram_size = (_x == 6)? 2048 : (_x == 5)? 1024 : (_x == 4)? 512 : (_x == 3)? 256 : (_x == 2)? 128 : \
-				(_x == 1)? 64 : (_x == 0)? 16 : 0; 
+				(_x == 1)? 64 : (_x == 0)? 16 : 0;
 #elif defined (RT5350_FPGA_BOARD) || defined (RT5350_ASIC_BOARD)
 		int dram_size = (_x == 4)? 512 : (_x == 3)? 256 : (_x == 2)? 128 : \
-				(_x == 1)? 64 : (_x == 0)? 16 : 0; 
+				(_x == 1)? 64 : (_x == 0)? 16 : 0;
 #elif defined (RT3883_FPGA_BOARD) || defined (RT3883_ASIC_BOARD)
 		int dram_size = (_x == 6)? 2048 : (_x == 5)? 1024 : (_x == 4)? 512 : \
 				(_x == 3)? 256 : (_x == 2)? 128 : (_x == 1)? 64 : \
-				(_x == 0)? 16 : 0; 
+				(_x == 0)? 16 : 0;
 #endif
 		if(((reg >> 15) & 0x1)){
 		    dram_total_width = 32;
@@ -1754,35 +1754,35 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	{
 		unsigned long chip_mode, dram_comp, dram_bus, is_ddr1, is_ddr2, data, cfg0, cfg1, size=0;
 		int dram_type_bit_offset = 0;
-#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)	
+#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 		data = RALINK_REG(RALINK_SYSCTL_BASE+0x8c);
 		chip_mode = ((data>>28) & 0x3)|(((data>>22) & 0x3)<<2);
 		dram_type_bit_offset = 24;
-#else		
+#else
 		data = RALINK_REG(RALINK_SYSCTL_BASE+0x10);
 		chip_mode = (data&0x0F);
 		dram_type_bit_offset = 4;
-#endif		
-		switch((data>>dram_type_bit_offset)&0x3)			
+#endif
+		switch((data>>dram_type_bit_offset)&0x3)
 		{
 			default:
 			case 0:
 				is_ddr2 = is_ddr1 = 0;
 				break;
 #if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
-#else				
+#else
 			case 3:
 #endif
 #if defined (MT7620_ASIC_BOARD) || defined (MT7620_FPGA_BOARD) || defined (MT7628_ASIC_BOARD) || defined (MT7628_FPGA_BOARD)
-				is_ddr1 = 1; 
+				is_ddr1 = 1;
 				is_ddr2 = 0;
-#else				
+#else
 				is_ddr2 = is_ddr1 = 0;
 #endif
 				break;
 #if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 			case 2:
-#else				
+#else
 			case 1:
 #endif
 				is_ddr2 = 0;
@@ -1790,14 +1790,14 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 				break;
 #if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 			case 3:
-#else				
+#else
 			case 2:
 #endif
 				is_ddr2 = 1;
 				is_ddr1 = 0;
 				break;
 		}
-		
+
 		switch((data>>dram_type_bit_offset)&0x3)
 		{
 			case 0:
@@ -1805,38 +1805,38 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 #else
 			case 3:
-#endif				
+#endif
 				cfg0 = RALINK_REG(RALINK_MEMCTRL_BASE+0x0);
 				cfg1 = RALINK_REG(RALINK_MEMCTRL_BASE+0x4);
 				data = cfg1;
-				
+
 				dram_comp = 1<<(2+(((data>>16)&0x3)+11)+(((data>>20)&0x3)+8)+1+3-20);
 				dram_bus = ((data>>24)&0x1) ? 32 : 16;
-				size = 1<<(2 +(((data>>16)&0x3)+11)+(((data>>20)&0x3)+8)+1-20);       	
+				size = 1<<(2 +(((data>>16)&0x3)+11)+(((data>>20)&0x3)+8)+1-20);
 				break;
 			case 1:
 			case 2:
 #if defined (MT7620_ASIC_BOARD) || defined (MT7620_FPGA_BOARD) || defined (MT7628_ASIC_BOARD) || defined (MT7628_FPGA_BOARD) || \
 	defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 			case 3:
-#endif				
+#endif
 				cfg0 = RALINK_REG(RALINK_MEMCTRL_BASE+0x40);
 				cfg1 = RALINK_REG(RALINK_MEMCTRL_BASE+0x44);
 				data = cfg1;
 				dram_comp = 1<<(((data>>18)&0x7)+5);
-			    dram_bus = 1<<(((data>>12)&0x3)+2);	
+			    dram_bus = 1<<(((data>>12)&0x3)+2);
 				if(((data>>16)&0x3) < ((data>>12)&0x3))
 				{
-					size = 1<<(((data>>18)&0x7) + 22 + 1-20); 
+					size = 1<<(((data>>18)&0x7) + 22 + 1-20);
 				}
 				else
 				{
 					size = 1<<(((data>>18)&0x7) + 22-20);
-				}	
+				}
 				break;
 		}
-#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)		
-		if ((((RALINK_REG(RALINK_SYSCTL_BASE+0x8c)>>30)&0x1)==0) && ((chip_mode==2)||(chip_mode==3))) 
+#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
+		if ((((RALINK_REG(RALINK_SYSCTL_BASE+0x8c)>>30)&0x1)==0) && ((chip_mode==2)||(chip_mode==3)))
 		{
 #if defined(ON_BOARD_DDR2)
 			is_ddr2 = 1;
@@ -1862,9 +1862,9 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		{
 		printf("[SDR_CFG0=0x%08X, SDR_CFG1=0x%08X]\n", RALINK_REG(RALINK_MEMCTRL_BASE+0x0),\
 								RALINK_REG(RALINK_MEMCTRL_BASE+0x4));
-		}	
+		}
 		else
-		{		
+		{
 		printf("[DDR_CFG0 =0x%08X, DDR_CFG1 =0x%08X]\n", RALINK_REG(RALINK_MEMCTRL_BASE+0x40),\
 								RALINK_REG(RALINK_MEMCTRL_BASE+0x44));
 		printf("[DDR_CFG2 =0x%08X, DDR_CFG3 =0x%08X]\n", RALINK_REG(RALINK_MEMCTRL_BASE+0x48),\
@@ -1872,16 +1872,16 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		printf("[DDR_CFG4 =0x%08X, DDR_CFG10=0x%08X]\n", RALINK_REG(RALINK_MEMCTRL_BASE+0x50),\
 								RALINK_REG(RALINK_MEMCTRL_BASE+0x68));
 		}
-#endif			
+#endif
 		printf("DRAM_CONF_FROM: %s \n", ((RALINK_REG(RALINK_SYSCTL_BASE+0x8c)>>30)&0x1) ? \
 			"From SPI/NAND": (((chip_mode==2)||(chip_mode==3)) ? "From Uboot" : "Boot-strap"));
 #elif defined (MT7620_ASIC_BOARD) || defined(MT7620_FPGA_BOARD) || defined (MT7628_ASIC_BOARD) || defined(MT7628_FPGA_BOARD)
-		printf("DRAM_CONF_FROM: %s \n", (((RALINK_REG(RALINK_SYSCTL_BASE+0x10)>>8)&0x1)==0) ? "From SPI/NAND": 
+		printf("DRAM_CONF_FROM: %s \n", (((RALINK_REG(RALINK_SYSCTL_BASE+0x10)>>8)&0x1)==0) ? "From SPI/NAND":
 				(((chip_mode==2)||(chip_mode==3)) ? "From Uboot" : "Auto-detection"));
 #else
 		printf("DRAM_CONF_FROM: %s \n", ((RALINK_REG(RALINK_SYSCTL_BASE+0x10)>>7)&0x1) ? "From SPI/NAND":
 				(((chip_mode==2)||(chip_mode==3)) ? "From Uboot" : "Auto-detection"));
-#endif		
+#endif
 		printf("DRAM_TYPE: %s \n", is_ddr2 ? "DDR2": (is_ddr1 ? "DDR1" : "SDRAM"));
 		printf("DRAM component: %d Mbits\n", dram_comp);
 		printf("DRAM bus: %d bit\n", dram_bus);
@@ -1895,7 +1895,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	printf("============================================ \n");
 	printf("Ralink UBoot Version: %s\n", RALINK_LOCAL_VERSION);
 	printf("-------------------------------------------- \n");
-#ifdef RALINK_DUAL_CORE_FUN	
+#ifdef RALINK_DUAL_CORE_FUN
 	printf("%s %s %s %s\n", CHIP_TYPE, RALINK_REG(RT2880_CHIP_REV_ID_REG)>>16&0x1 ? "MT7621A" : "MT7621N", "DualCore", GMAC_MODE);
 #else
 	if(RALINK_REG(RT2880_CHIP_REV_ID_REG)>>17&0x1) {
@@ -1960,7 +1960,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		icache_ways *
 		icache_linesz;
 
-	printf("icache: sets:%d, ways:%d, linesz:%d ,total:%d\n", 
+	printf("icache: sets:%d, ways:%d, linesz:%d ,total:%d\n",
 			icache_sets, icache_ways, icache_linesz, icache_size);
 
 	/*
@@ -1978,7 +1978,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		dcache_ways *
 		dcache_linesz;
 
-	printf("dcache: sets:%d, ways:%d, linesz:%d ,total:%d \n", 
+	printf("dcache: sets:%d, ways:%d, linesz:%d ,total:%d \n",
 			dcache_sets, dcache_ways, dcache_linesz, dcache_size);
 
 #endif
@@ -2035,7 +2035,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		for (rcount = 0; rcount <= CONFIG_FACTORY_RESET_TIME; rcount++) {
 			rreg = read_gpio();
 			if (rreg & (1 << factory_reset_gpio)) {
-				if (rcount > 0) { 
+				if (rcount > 0) {
 					printf("...released, NOT resetting\n");
 				}
 				break;
@@ -2071,7 +2071,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		setenv("BootType", s1);
 	}
 
-	OperationSelect();   
+	OperationSelect();
 	printf("default: %c\n", BootType);
 	while (timer1 > 0) {
 		--timer1;
@@ -2112,7 +2112,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		switch(BootType) {
 		case '1':
 			printf("   \n%d: System Load Linux to SDRAM via TFTP. \n", SEL_LOAD_LINUX_SDRAM);
-			tftp_config(SEL_LOAD_LINUX_SDRAM, argv);           
+			tftp_config(SEL_LOAD_LINUX_SDRAM, argv);
 			argc= 3;
 			setenv("autostart", "yes");
 			do_tftpb(cmdtp, 0, argc, argv);
@@ -2196,7 +2196,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			argc= 2;
 			sprintf(addr_str, "0x%X", CFG_KERN_ADDR);
 			argv[1] = &addr_str[0];
-			do_bootm(cmdtp, 0, argc, argv);            
+			do_bootm(cmdtp, 0, argc, argv);
 			break;
 
 #ifdef RALINK_CMDLINE
@@ -2204,7 +2204,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			printf("   \n%d: System Enter Boot Command Line Interface.\n", SEL_ENTER_CLI);
 			printf ("\n%s\n", version_string);
 			/* main_loop() can return to retry autoboot, if so just run it again. */
-			for (;;) {					
+			for (;;) {
 				main_loop ();
 			}
 			break;
@@ -2243,17 +2243,17 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 				printf("From 0x%X To 0x%X\n", CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 				flash_sect_erase(CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 
-				//cp.uboot            
+				//cp.uboot
 				argc = 4;
 				argv[0]= "cp.uboot";
-				do_mem_cp(cmdtp, 0, argc, argv);                       
+				do_mem_cp(cmdtp, 0, argc, argv);
 
 				//protect on uboot
 				flash_sect_protect(1, CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 			}
 #endif //CFG_ENV_IS_IN_FLASH
 
-			//reset            
+			//reset
 			do_reset(cmdtp, 0, argc, argv);
 			break;
 #endif // RALINK_UPGRADE_BY_SERIAL //
@@ -2306,17 +2306,17 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 				printf("From 0x%X To 0x%X\n", CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 				flash_sect_erase(CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 
-				//cp.uboot            
+				//cp.uboot
 				argc = 4;
 				argv[0]= "cp.uboot";
-				do_mem_cp(cmdtp, 0, argc, argv);                       
+				do_mem_cp(cmdtp, 0, argc, argv);
 
 				//protect on uboot
 				flash_sect_protect(1, CFG_FLASH_BASE, CFG_FLASH_BASE+CFG_BOOTLOADER_SIZE-1);
 			}
 #endif //CFG_ENV_IS_IN_FLASH
 
-			//reset            
+			//reset
 			do_reset(cmdtp, 0, argc, argv);
 			break;
 #ifdef RALINK_UPGRADE_BY_SERIAL
@@ -2334,7 +2334,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			raspi_erase_write((char *)CFG_LOAD_ADDR, CFG_KERN_ADDR-CFG_FLASH_BASE, NetBootFileXferSize);
 #endif //CFG_ENV_IS_IN_FLASH
 
-			//reset            
+			//reset
 			do_reset(cmdtp, 0, argc, argv);
 			break;
 #endif
@@ -2373,7 +2373,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			raspi_erase_write((char *)CFG_LOAD_ADDR, CFG_KERN_ADDR-CFG_FLASH_BASE, NetBootFileXferSize);
 #endif //CFG_ENV_IS_IN_FLASH
 
-			//reset            
+			//reset
 			do_reset(cmdtp, 0, argc, argv);
 			break;
 #endif
@@ -2381,7 +2381,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		case '6':
 			auto_load = 1;
 			printf("   \n%d: System Load Linux to SDRAM via TFTP [Automatically]. \n", SEL_LOAD_LINUX_SDRAM);
-			tftp_config(SEL_LOAD_LINUX_SDRAM, argv);           
+			tftp_config(SEL_LOAD_LINUX_SDRAM, argv);
 			argc= 3;
 			setenv("autostart", "yes");
 			do_tftpb(cmdtp, 0, argc, argv);
@@ -2391,8 +2391,8 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		default:
 			printf("   \nSystem Boot Linux via Flash.\n");
 			do_bootm(cmdtp, 0, 1, argv);
-			break;            
-		} /* end of switch */   
+			break;
+		} /* end of switch */
 
 		do_reset(cmdtp, 0, argc, argv);
 
@@ -2608,7 +2608,7 @@ void adjust_rf_r17(void)
 		udelay(2000);
 		rw_rf_reg(0, 17, &val);
 		//printf("Update RF_R17 to 0x%0X\n", val);
-		}	
+		}
 	}
 	else{
 		for(i=1; i<=0xf; i++) {
@@ -2626,7 +2626,7 @@ void adjust_rf_r17(void)
 		udelay(2000);
 		rw_rf_reg(0, 17, &val);
 		printf("Update RF_R17 to 0x%0X\n", val);
-		
+
 		if(r17 <= 0x1f) {
 			for(i=0x1e; i>=r17; i--) {
 			//write to RF R17
@@ -2687,16 +2687,16 @@ void adjust_rf_r17(void)
 void config_usb_ehciohci(void)
 {
 	u32 val;
-	
+
 	val = RALINK_REG(RT2880_RSTCTRL_REG);    // toggle host & device RST bit
 	val = val | RALINK_UHST_RST | RALINK_UDEV_RST;
 	RALINK_REG(RT2880_RSTCTRL_REG) = val;
 
 	val = RALINK_REG(RT2880_CLKCFG1_REG);
 #if defined(RT5350_ASIC_BOARD) || defined(RT6855_ASIC_BOARD)
-	val = val & ~(RALINK_UPHY0_CLK_EN) ;  // disable USB port0 PHY. 
+	val = val & ~(RALINK_UPHY0_CLK_EN) ;  // disable USB port0 PHY.
 #else
-	val = val & ~(RALINK_UPHY0_CLK_EN | RALINK_UPHY1_CLK_EN) ;  // disable USB port0 & port1 PHY. 
+	val = val & ~(RALINK_UPHY0_CLK_EN | RALINK_UPHY1_CLK_EN) ;  // disable USB port0 & port1 PHY.
 #endif
 	RALINK_REG(RT2880_CLKCFG1_REG) = val;
 }
@@ -2739,7 +2739,7 @@ void config_usb_mtk_xhci(void)
 		RALINK_REG(0xbe1d0b10) = 0x23800000;
 		RALINK_REG(0xbe1d0b04) = 0x20000005;
 		RALINK_REG(0xbe1d0b08) = 0x12203200;
-	
+
 		RALINK_REG(0xbe1d0b2c) = 0x1400028;
 		//RALINK_REG(0xbe1d0a30) =;
 		RALINK_REG(0xbe1d0a40) = 0xffff0001;
@@ -2758,7 +2758,7 @@ int usbotg_host_suspend(void)
 {
 	u32 val;
 	int i, rc=0, retry_count=0;
-	
+
 	printf(".");
 
 retry_suspend:
@@ -2804,7 +2804,7 @@ retry_suspend:
 	//printf("6.b01c0440 = 0x%08x\n", val);
 
 	udelay(10000);
-	
+
 	//printf("port reset -- clear\n");
 	val = val & ~(1 << 8);
 	*(volatile u_long *)(0xB01C0440) = cpu_to_le32(val);
@@ -2901,7 +2901,7 @@ int usbotg_device_suspend(void)
 
 void config_usbotg(void)
 {
-	int i, host_rc, device_rc;	
+	int i, host_rc, device_rc;
 
 	printf("config usb");
 	for(i=0;i<2;i++){
@@ -2913,7 +2913,7 @@ void config_usbotg(void)
 		else
 			break;
 	}
-	
+
 	RALINK_REG(0xB01C0E00) = 0xF;        //disable USB module, optimize for power-saving
 	printf("\n");
 	return;
@@ -2921,7 +2921,7 @@ void config_usbotg(void)
 
 #endif
 
-#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)	
+#if defined (RT6855A_ASIC_BOARD) || defined(RT6855A_FPGA_BOARD)
 static int watchdog_reset()
 {
 	unsigned int word;
@@ -2947,7 +2947,7 @@ static int watchdog_reset()
 void disable_pcie(void)
 {
 	u32 val;
-	
+
 	val = RALINK_REG(RT2880_RSTCTRL_REG);    // assert RC RST
 	val |= RALINK_PCIE0_RST;
 	RALINK_REG(RT2880_RSTCTRL_REG) = val;
