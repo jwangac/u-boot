@@ -238,6 +238,8 @@ static u8 local_buffer[4096 + 512];
 extern void nand_release_device(struct mtd_info *mtd);
 extern int nand_get_device(struct nand_chip *chip, struct mtd_info *mtd, int new_state);
 
+extern void LED_ALERT_BLINK(void);
+
 static bmt_struct *g_bmt;
 struct mtk_nand_host *host;
 static u8 g_running_dma = 0;
@@ -348,7 +350,7 @@ flashdev_info devinfo;
 
 void dump_nfi(void)
 {
-#if __DEBUG_NAND
+#if 0
 	printk("\n==========================NFI DUMP==================================\n");
     printk(KERN_INFO "NFI_ACCCON(%08X): 0x%x\n",  NFI_ACCCON_REG32, DRV_Reg32(NFI_ACCCON_REG32));
     printk(KERN_INFO "NFI_PAGEFMT(%08X): 0x%x\n", NFI_PAGEFMT_REG16, DRV_Reg16(NFI_PAGEFMT_REG16));
@@ -381,7 +383,7 @@ void dump_nfi(void)
 
 void dump_ecc(void)
 {
-#if __DEBUG_NAND
+#if 0
 	printk("\n==========================NFIECC DUMP==================================\n");
     printk(KERN_INFO "ECC_ENCCON_REG16(%08X): 0x%x\n",  ECC_ENCCON_REG16, DRV_Reg16(ECC_ENCCON_REG16));
     printk(KERN_INFO "ECC_ENCCNFG_REG32(%08X): 0x%x\n", ECC_ENCCNFG_REG32, DRV_Reg32(ECC_ENCCNFG_REG32));
@@ -502,18 +504,8 @@ bool get_device_info(u16 id, u32 ext_id, flashdev_info * pdevinfo)
     {
         if (id == gen_FlashTable[index].id && ext_id == gen_FlashTable[index].ext_id)
         {
-            pdevinfo->id = gen_FlashTable[index].id;
-            pdevinfo->ext_id = gen_FlashTable[index].ext_id;
-            pdevinfo->blocksize = gen_FlashTable[index].blocksize;
-            pdevinfo->addr_cycle = gen_FlashTable[index].addr_cycle;
-            pdevinfo->iowidth = gen_FlashTable[index].iowidth;
-            pdevinfo->timmingsetting = gen_FlashTable[index].timmingsetting;
-            pdevinfo->advancedmode = gen_FlashTable[index].advancedmode;
-            pdevinfo->pagesize = gen_FlashTable[index].pagesize;
-            pdevinfo->sparesize = gen_FlashTable[index].sparesize;
-            pdevinfo->totalsize = gen_FlashTable[index].totalsize;
-            memcpy(pdevinfo->devciename, gen_FlashTable[index].devciename, sizeof(pdevinfo->devciename));
-            printk(KERN_INFO "Device found in MTK table, ID: %x, EXT_ID: %x\n", id, ext_id);
+            memcpy(pdevinfo, &gen_FlashTable[index], sizeof(flashdev_info));
+            printk(KERN_INFO "Device found in MTK table: %s\n", pdevinfo->devicename);
 
             goto find;
         }
@@ -2190,7 +2182,7 @@ int mtk_nand_exec_write_page(struct mtd_info *mtd, u32 u4RowAddr, u32 u4PageSize
     PFM_BEGIN(pfm_time_write);
     if (((u32) pPageBuf % 16) && local_buffer_16_align)
     {
-        printk(KERN_INFO "Data buffer not 16 bytes aligned: %p\n", pPageBuf);
+//        printk(KERN_INFO "Data buffer not 16 bytes aligned: %p\n", pPageBuf);
         memcpy(local_buffer_16_align, pPageBuf, mtd->writesize);
         buf = local_buffer_16_align;
     } else
@@ -2472,7 +2464,7 @@ static void mtk_nand_select_chip(struct mtd_info *mtd, int chip)
     		ASSERT(0);
   	}
   	 mtd->oobsize = spare_per_sector*(mtd->writesize/512);
-  	 printf("[NAND]select ecc bit:%d, sparesize :%d spare_per_sector=%d\n",ecc_bit,mtd->oobsize,spare_per_sector);
+//  	 printf("[NAND]select ecc bit: %d, sparesize: %d spare_per_sector: %d\n",ecc_bit,mtd->oobsize,spare_per_sector);
         /* Setup PageFormat */
         if (4096 == mtd->writesize)
         {
@@ -3502,7 +3494,6 @@ static void mtk_nand_init_hw(struct mtk_nand_host *host)
 	data |= ((0x2<<18) |(0x2<<16));
 	DRV_WriteReg32(RALINK_SYSCTL_BASE+0x60, data);
 
-    MSG(INIT, "Enable NFI Clock\n");
     nand_enable_clock();
 
     g_bInitDone = false;
@@ -3519,7 +3510,7 @@ static void mtk_nand_init_hw(struct mtk_nand_host *host)
     /* Set the ECC engine */
     if (hw->nand_ecc_mode == NAND_ECC_HW)
     {
-        MSG(INIT, "%s : Use HW ECC\n", MODULE_NAME);
+//        MSG(INIT, "%s : Use HW ECC\n", MODULE_NAME);
         if (g_bHwEcc)
         {
             NFI_SET_REG32(NFI_CNFG_REG16, CNFG_HW_ECC_EN);
@@ -3705,7 +3696,7 @@ int read_fact_bbt(unsigned int page)
 
 	if (mtk_nand_exec_read_page(mtd, page, mtd->writesize, chip->buffers->databuf, chip->oob_poi))
 	{
-		printf("Signature matched and data read!\n");
+//		printf("Signature matched and data read!\n");
 		memcpy(fact_bbt, chip->buffers->databuf, (bbt_size <= mtd->writesize)? bbt_size:mtd->writesize);
 		if (bbt_size > mtd->writesize)
 			printf("Warning: factory BBT is more than a page\n");
@@ -3745,14 +3736,11 @@ int load_fact_bbt()
 	u32 total_block;
 	int fact_bad_pos;
 	bool bRet;
-	unsigned int page_per_block_mask;
-
 
 	mtd = &host->mtd;
 	chip  = &host->nand_chip;
 	total_block = 1 << (chip->chip_shift - chip->phys_erase_shift);
 	bbt_size = total_block >> 2;
-	page_per_block_mask = (1 << (chip->phys_erase_shift - chip->page_shift)) - 1;
 
 	for (i = total_block - 1; i >= (total_block - FACT_BBT_BLOCK_NUM); i--)
 	{
@@ -3773,11 +3761,9 @@ int load_fact_bbt()
 	for (i = 0; i < total_block; i++)
 	{
 
-		// check the first and second page and the last
-		for (page = i << (chip->phys_erase_shift - chip->page_shift); page < (((i+1) << (chip->phys_erase_shift - chip->page_shift))); page++)
+		// check the first and second page
+		for (page = i << (chip->phys_erase_shift - chip->page_shift); page <= ((i << (chip->phys_erase_shift - chip->page_shift)) + 1) ; page++)
 		{
-			if (((page & page_per_block_mask) != (unsigned int)page_per_block_mask) && ((page & page_per_block_mask) >= (unsigned int)2))
-				continue;
 			bRet = mtk_nand_exec_read_page(mtd, page, mtd->writesize, chip->buffers->databuf, chip->oob_poi);
 
 			if (bRet == false)
@@ -3788,8 +3774,8 @@ int load_fact_bbt()
 			}
 			else
 			{
-				if (mtk_nand_read_oob_hw(mtd, chip, page)==0)
-				{
+			if (mtk_nand_read_oob_hw(mtd, chip, page)==0)
+			{
 					if (chip->buffers->databuf[fact_bad_pos] != 0xff)
 					{
 						int fact_bad = 0;
@@ -3797,25 +3783,25 @@ int load_fact_bbt()
 						if (chip->oob_poi[0] != 0xff)
 							fact_bad = 1;
 
-						for (j = 0; j < chip->ecc.layout->eccbytes; j++)
-						{
+				for (j = 0; j < chip->ecc.layout->eccbytes; j++)
+				{
 							if ((chip->oob_poi[chip->ecc.layout->eccpos[j]] == 0xff) || (chip->oob_poi[chip->ecc.layout->eccpos[j]] == 0x0))
-								continue;
-							else
-								break;
-						}
+						continue;
+					else
+						break;
+				}
 
-						if (j == chip->ecc.layout->eccbytes)
-						{
+				if (j == chip->ecc.layout->eccbytes)
+				{
 							fact_bad = 1;
 						}
 
 						if (fact_bad)
-						{
-							fact_bbt[i >> 2] |= 0x3 << ((i*2) & 6);
-							printf("detect bad block at 0x%x (%d)\n", (unsigned int) i, (unsigned int)(page & 0x1)+1);
-							continue;
-						}
+					{
+						fact_bbt[i >> 2] |= 0x3 << ((i*2) & 6);
+						printf("detect bad block at 0x%x (%d)\n", (unsigned int) i, (unsigned int)(page & 0x1)+1);
+						continue;
+					}
 
 					}
 				}
@@ -3954,7 +3940,6 @@ int mtk_nand_probe()
 #else 
     /* Allocate memory for 16 byte aligned buffer */
     local_buffer_16_align = local_buffer + 16 - ((u32) local_buffer % 16);
-    printk(KERN_INFO "Allocate 16 byte aligned buffer: %p\n", local_buffer_16_align);
 #endif
     host->hw = hw;
 
@@ -4090,7 +4075,7 @@ int mtk_nand_probe()
     	}
 	    	
     	devinfo.timmingsetting = NFI_DEFAULT_ACCESS_TIMING;
-    	devinfo.devciename[0] = 'U';
+    	devinfo.devicename[0] = 'U';
     	devinfo.advancedmode = 0;
     }	
 	mtd->writesize = devinfo.pagesize;
@@ -4128,14 +4113,13 @@ int mtk_nand_probe()
     //   devinfo.pagesize,  sizeof(g_kCMD.au1OOB),nand_chip->ecc.layout->eccbytes);
   
 
-    MSG(INIT, "Support this Device in MTK table! %x \r\n", id);
     hw->nfi_bus_width = devinfo.iowidth;
     DRV_WriteReg32(NFI_ACCCON_REG32, devinfo.timmingsetting);
 
     /* 16-bit bus width */
     if (hw->nfi_bus_width == 16)
     {
-        MSG(INIT, "%s : Set the 16-bit I/O settings!\n", MODULE_NAME);
+//        MSG(INIT, "%s : Set the 16-bit I/O settings!\n", MODULE_NAME);
         nand_chip->options |= NAND_BUSWIDTH_16;
     }
 #if defined (__INTERNAL_USE_AHB_MODE__) && defined (__KERNEL_NAND__)
@@ -4226,9 +4210,7 @@ int mtk_nand_probe()
 
 #ifdef FACT_BBT
 
-	if (load_fact_bbt() == 0)
-		printf("load fact bbt success\n");
-	else
+	if (load_fact_bbt() != 0)
 		printf("load fact bbt fail\n");
 #endif
 
@@ -4245,8 +4227,8 @@ int mtk_nand_probe()
     /* Successfully!! */
     if (!err)
     {
-        MSG(INIT, "[mtk_nand] probe successfully!\n");
-        MSG(INIT, "mtd->writesize=%d mtd->oobsize=%d,	mtd->erasesize=%d  devinfo.iowidth=%d\n",mtd->writesize,mtd->oobsize, mtd->erasesize,devinfo.iowidth);
+//        MSG(INIT, "[mtk_nand] probe successfully!\n");
+        MSG(INIT, "writesize=%d, oobsize=%d, erasesize=%d, iowidth=%d\n",mtd->writesize,mtd->oobsize, mtd->erasesize,devinfo.iowidth);
         nand_disable_clock();
         return err;
     }
@@ -4885,7 +4867,7 @@ int ranand_read(char *buf, unsigned int from, int datalen)
 	buffers = (((u32)buffers_orig + 15)/16)*16;
 
 /* while (datalen || ooblen) {*/
-	while (datalen) {
+	while (datalen > 0) {
 		int len;
 		int ret;
 		int offs;
@@ -4901,14 +4883,14 @@ int ranand_read(char *buf, unsigned int from, int datalen)
 #ifdef CONFIG_BADBLOCK_CHECK
 		if (ignore_bad == 0)
 		{
-			ret = mtk_nand_block_bad_hw(mtd, addr);
-			/* if we have a bad block, read from next block instead */
-			if (ret) {
-				printf("%s: skip reading a bad block %x ->", __func__, (unsigned int)addr);
-				addr += mtd->erasesize;
-				printf(" %x\n", (unsigned int)addr);
-				continue;
-			}
+		ret = mtk_nand_block_bad_hw(mtd, addr);
+		/* if we have a bad block, read from next block instead */
+		if (ret) {
+			printf("%s: skip reading a bad block %x ->", __func__, (unsigned int)addr);
+			addr += mtd->erasesize;
+			printf(" %x\n", (unsigned int)addr);
+			continue;
+		}
 		}
 #endif
 
@@ -4953,7 +4935,7 @@ int ranand_read(char *buf, unsigned int from, int datalen)
 }
 #endif
 #if defined(__UBOOT_NAND__)
-int ranand_erase(unsigned int offs, u32 len)
+int ranand_erase(unsigned int offs, int len)
 {
 	int page, status;
 	int ret = 0;
@@ -4961,13 +4943,13 @@ int ranand_erase(unsigned int offs, u32 len)
 	struct mtd_info *mtd;
 	struct nand_chip *nand_chip;
 	int lowlevel_erase = 0;
-	
+
 	ra_dbg("%s: start:%x, len:%x \n", __func__, offs, len);
-	
+
 	mtd = &host->mtd;
 	nand_chip  = &host->nand_chip;
 
-  	len = max(len, mtd->erasesize);
+	len = max(len, (int)mtd->erasesize);
 
 #define BLOCK_ALIGNED(a) ((a) & (mtd->erasesize - 1))
 
@@ -4975,13 +4957,14 @@ int ranand_erase(unsigned int offs, u32 len)
 		ra_dbg("%s: erase block not aligned, addr:%x len:%x %x\n", __func__, offs, len, mtd->erasesize);
 		return -1;
 	}
-	
-	while (len) {
+
+	while (len > 0) {
 		page = (int)(offs >> nand_chip->page_shift); 
 #ifdef FACT_BBT
 		if (is_fact_bad(page)) {
 			printf("%s: attempt to erase a fact bad block at 0x%08x\n", __func__, offs);
 			ret ++;
+			len -= mtd->erasesize;
 			offs += mtd->erasesize;
 			continue;
 		}
@@ -4993,6 +4976,7 @@ int ranand_erase(unsigned int offs, u32 len)
 		if (result) {
 			printf("%s: attempt to erase a bad block at 0x%08x\n", __func__, offs);
 			ret++;
+			len -= mtd->erasesize;
 			offs += mtd->erasesize;
 			continue;
 		}
@@ -5006,7 +4990,6 @@ int ranand_erase(unsigned int offs, u32 len)
 			//return -1;
 			ret = -1;
 		}
-		printf(".");
 		/* Increment page address and decrement length */
 		len -= mtd->erasesize;
 		offs += mtd->erasesize;
@@ -5015,7 +4998,7 @@ int ranand_erase(unsigned int offs, u32 len)
 	return ret;
 }
 
-int ranand_erase_raw(unsigned int offs, u32 len, int earse_fact_bbt)
+int ranand_erase_raw(unsigned int offs, int len, int earse_fact_bbt)
 {
 	int page, status;
 	int ret = 0;
@@ -5029,7 +5012,7 @@ int ranand_erase_raw(unsigned int offs, u32 len, int earse_fact_bbt)
 	mtd = &host->mtd;
 	nand_chip  = &host->nand_chip;
 
-  	len = max(len, mtd->erasesize);
+	len = max(len, (int)mtd->erasesize);
 
 #define BLOCK_ALIGNED(a) ((a) & (mtd->erasesize - 1))
 
@@ -5037,8 +5020,8 @@ int ranand_erase_raw(unsigned int offs, u32 len, int earse_fact_bbt)
 		ra_dbg("%s: erase block not aligned, addr:%x len:%x %x\n", __func__, offs, len, mtd->erasesize);
 		return -1;
 	}
-	
-	while (len) {
+
+	while (len > 0) {
 		page = (int)(offs >> nand_chip->page_shift); 
 #ifdef FACT_BBT
 		if (!earse_fact_bbt)
@@ -5046,6 +5029,7 @@ int ranand_erase_raw(unsigned int offs, u32 len, int earse_fact_bbt)
 			if (is_fact_bad(page)) {
 				printf("%s: attempt to erase a fact bad block at 0x%08x\n", __func__, offs);
 				ret ++;
+				len -= mtd->erasesize;
 				offs += mtd->erasesize;
 				continue;
 			}
@@ -5080,10 +5064,12 @@ int ranand_write(char *buf, unsigned int to, int datalen)
 	char* buffers, *buffers_orig;
 	struct mtd_info *mtd;
 	struct nand_chip *nand_chip;
-  
+
+	ra_dbg("%s: start:%x, len:%x \n", __func__, to, datalen);
+
 	mtd = &host->mtd;
 	nand_chip  = &host->nand_chip;
-  
+
 	if (buf == 0)
 		datalen = 0;
 
@@ -5091,10 +5077,10 @@ int ranand_write(char *buf, unsigned int to, int datalen)
 	memset(buffers_orig, 0x0ff, mtd->writesize + mtd->oobsize + 32);
 	if (buffers_orig == NULL)
 		return -1;
-	
-    buffers = (((u32)buffers_orig + 15)/16)*16;	
+
+	buffers = (((u32)buffers_orig + 15)/16)*16;
 	// page write
-	while (datalen) {
+	while (datalen > 0) {
 		int len;
 		int ret;
 		int offs;
@@ -5150,19 +5136,22 @@ int ranand_erase_write(char *buf, unsigned int offs, int count)
 	int blocksize; 
 	int blockmask;
 	int rc;
+	ulong led_time;
 	struct mtd_info *mtd;
 	struct nand_chip *nand_chip;
-  	
+
 	mtd = &host->mtd;
 	nand_chip  = &host->nand_chip;
 	blocksize = mtd->erasesize;
- 	blockmask = blocksize - 1; 
+	blockmask = blocksize - 1;
 
 	if ((uint64_t)count > (nand_chip->chipsize - (uint64_t)(CFG_BOOTLOADER_SIZE + CFG_CONFIG_SIZE + CFG_FACTORY_SIZE))) 	{
 		printf("Abort: image size larger than %lld!\n\n", nand_chip->chipsize  -
 					(uint64_t)(CFG_BOOTLOADER_SIZE + CFG_CONFIG_SIZE + CFG_FACTORY_SIZE));
 		return -1;
 	}
+
+	led_time = get_timer(0);
 
 	while (count > 0) {
 #define BLOCK_ALIGNED(a) ((a) & (blocksize - 1))
@@ -5194,7 +5183,7 @@ try_next_0:
 			memcpy(block + piece, buf, piece_size);
 
 			rc = ranand_erase(blockaddr, blocksize);
-			ra_dbg("(%d)offs=%d piece=%d piece_size=%d rc=%d\n",__LINE__,offs,piece,piece_size,rc);
+//			ra_dbg("(%d)offs=%d piece=%d piece_size=%d rc=%d\n",__LINE__,offs,piece,piece_size,rc);
 
 #ifdef CONFIG_BADBLOCK_CHECK
 			if (rc >= 1) {
@@ -5222,7 +5211,7 @@ try_next_0:
 			count -= piece_size;
 		}
 		else {
-			unsigned int aligned_size = blocksize;
+			int aligned_size = blocksize;
 
 try_next_1:
 			rc = ranand_erase(offs, aligned_size);
@@ -5244,12 +5233,14 @@ try_next_1:
 				return -1;
 			}
 
-			
-			printf(".");
-
 			buf += aligned_size;
 			offs += aligned_size;
 			count -= aligned_size;
+		}
+
+		if ((get_timer(led_time)) > (CFG_HZ/8)) {
+			LED_ALERT_BLINK();
+			led_time = get_timer(0);
 		}
 	}
 
@@ -5287,9 +5278,8 @@ int ralink_nand_command(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	else if (!strncmp(argv[1], "read", 5)) {
 		addr = (unsigned int)simple_strtoul(argv[2], NULL, 16);
 
-		printf("pagemask=%08X, chipize=%08X\n",nand_chip->pagemask,nand_chip->chipsize);
-        printf("(%d) chip->page_shift=%d\n",__LINE__,nand_chip->page_shift);
-
+//		printf("pagemask=%08X, chipize=%08X\n",nand_chip->pagemask,nand_chip->chipsize);
+//		printf("(%d) chip->page_shift=%d\n",__LINE__,nand_chip->page_shift);
 
 		len = (int)simple_strtoul(argv[3], NULL, 16);
 		p = (u8 *)malloc(len);

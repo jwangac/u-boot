@@ -822,7 +822,7 @@ int do_mem_crc (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 #else	/* CONFIG_CRC32_VERIFY */
 
-#if defined(RT2880_U_BOOT_CMD_OPEN) || defined(RALINK_USB)
+#if defined(RT2880_U_BOOT_CMD_OPEN) || defined(RALINK_USB) || defined(MTK_USB)
 int do_mem_crc (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	ulong addr, length;
@@ -906,7 +906,7 @@ U_BOOT_CMD(
 );
 #endif
 #else	/* CONFIG_CRC32_VERIFY */
-#if defined(RT2880_U_BOOT_CMD_OPEN) || defined(RALINK_USB)
+#if defined(RT2880_U_BOOT_CMD_OPEN) || defined(RALINK_USB) || defined(MTK_USB)
 U_BOOT_CMD(
 	crc32,    5,    1,     do_mem_crc,
 	"crc32   - checksum calculation\n",
@@ -1005,6 +1005,8 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	ulong	addr = 0, dest = 0, count = 0;
 	int	size;
+
+	DECLARE_GLOBAL_DATA_PTR;
 
 	if(!memcmp(argv[0],"cp.linux",sizeof("cp.linux")))
 	{

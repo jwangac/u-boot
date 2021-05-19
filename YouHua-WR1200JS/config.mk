@@ -29,6 +29,18 @@ RALINK_SDR_PRECHARGE_POWER_DOWN = OFF		   # for mt7620, it is already enabled by
 RALINK_DDR_SELF_REFRESH_POWER_SAVE_MODE = OFF	   # for mt7620, it is already enabled by default.
 RALINK_SPI_UPGRADE_CHECK = ON
 RALINK_NAND_UPGRADE_CHECK = OFF
+RALINK_UPGRADE_BY_SERIAL = ON
+RALINK_USB = OFF
+RALINK_OHCI = OFF
+RALINK_EHCI = OFF
+MTK_XHCI = OFF
+MTK_MSDC = OFF
+EMMC_8BIT = OFF
+RALINK_SSO_TEST_FUN = OFF
+RALINK_VITESSE_SWITCH_CONNECT_SPI_CS1 = OFF
+RALINK_SPI_CS0_HIGH_ACTIVE = OFF
+RALINK_SPI_CS1_HIGH_ACTIVE = OFF
+
 ifeq ($(ON_BOARD_NAND_FLASH_COMPONENT),y)
 ifeq ($(MT7621_ASIC_BOARD),y)
 RALINK_RW_RF_REG_FUN = OFF
@@ -38,14 +50,16 @@ endif
 else
 RALINK_RW_RF_REG_FUN = ON
 endif
-RALINK_EHCI = OFF
-RALINK_OHCI = OFF
-RALINK_SSO_TEST_FUN = OFF
-RALINK_VITESSE_SWITCH_CONNECT_SPI_CS1 = OFF
-RALINK_SPI_CS0_HIGH_ACTIVE = OFF
-RALINK_SPI_CS1_HIGH_ACTIVE = OFF
-MTK_MSDC = OFF
-EMMC_8BIT = OFF
+
+ifeq ($(USB_RECOVERY_SUPPORT),y)
+ifeq ($(MT7621_MP),y)
+MTK_XHCI = ON
+else
+RALINK_EHCI = ON
+endif
+RALINK_USB = ON
+RALINK_UPGRADE_BY_SERIAL = OFF
+endif
 
 #Only for built-in 10/100/1000 Embedded Switch
 RALINK_EPHY_TESTER = OFF
@@ -57,19 +71,20 @@ RALINK_SWITCH_DEBUG_FUN = OFF
 # Optimized for Size flag
 ###################################
 ifeq ($(ON_BOARD_NAND_FLASH_COMPONENT),y)
-RALINK_UPGRADE_BY_SERIAL = ON
-else
-RALINK_UPGRADE_BY_SERIAL = ON
+RALINK_UPGRADE_BY_SERIAL = OFF
 endif
 RALINK_CMDLINE = ON
 RALINK_MDIO_ACCESS_FUN = ON
 RALINK_EPHY_INIT = ON
 
-ifeq ($(CONFIG_TINY_UBOOT), y)
-RALINK_SPI_UPGRADE_CHECK = OFF
-RALINK_UPGRADE_BY_SERIAL = ON
+ifeq ($(CONFIG_TINY_UBOOT),y)
+RALINK_UPGRADE_BY_SERIAL = OFF
+ifeq ($(MT7620_ASIC_BOARD),y)
+RALINK_RW_RF_REG_FUN = ON
+else
 RALINK_RW_RF_REG_FUN = OFF
-RALINK_CMDLINE = ON
+endif
+RALINK_CMDLINE = OFF
 endif
 
 ##############################
@@ -162,7 +177,7 @@ RANLIB	= $(CROSS_COMPILE)RANLIB
 
 RELFLAGS= $(PLATFORM_RELFLAGS)
 DBGFLAGS= -gdwarf-2 -DDEBUG
-OPTFLAGS= -Os #-fomit-frame-pointer
+OPTFLAGS= -Os
 ifndef LDSCRIPT
 #LDSCRIPT := $(TOPDIR)/board/$(BOARDDIR)/u-boot.lds.debug
 LDSCRIPT := $(TOPDIR)/board/$(BOARDDIR)/u-boot.lds
@@ -178,6 +193,12 @@ CPPFLAGS := $(DBGFLAGS) $(OPTFLAGS) $(RELFLAGS)		\
 	-fno-builtin -ffreestanding -nostdinc -isystem	\
 	$(gccincdir) -pipe $(PLATFORM_CPPFLAGS)
 #	-DROUTER100					\
+
+ifeq ($(MT7621_MP),y)
+CPPFLAGS += -EL -mmt -mips32r2
+else
+CPPFLAGS += -march=4kc -mtune=4kc
+endif
 
 ifeq ($(UN_NECESSITY_U_BOOT_CMD_OPEN),ON)
 CPPFLAGS += -DRT2880_U_BOOT_CMD_OPEN
@@ -230,17 +251,11 @@ endif
 
 ifeq ($(MT7628_ASIC_BOARD),y)
 ifeq ($(ON_BOARD_DDR1),y)
-CPPFLAGS += -DRALINK_DDR_POWERSAVE
+CPPFLAGS += -DRALINK_DDR_POWERSAVE -DCONFIG_DDR_CAL
 endif
 ifeq ($(ON_BOARD_DDR2),y)
 CPPFLAGS += -DRALINK_DDR_POWERSAVE
 endif
-endif
-
-ifeq ($(MT7621_MP),y)
-CPPFLAGS += -EL -mmt -mips32r2
-else
-CPPFLAGS += -march=4kc -mtune=4kc
 endif
 
 ifeq ($(RALINK_SPI_UPGRADE_CHECK),ON)
@@ -271,10 +286,6 @@ ifeq ($(RALINK_EPHY_TESTER),ON)
 CPPFLAGS += -DRALINK_EPHY_TESTER
 endif
 
-ifeq ($(RALINK_UPGRADE_BY_SERIAL),ON)
-CPPFLAGS += -DRALINK_UPGRADE_BY_SERIAL
-endif
-
 ifeq ($(RALINK_CMDLINE),ON)
 CPPFLAGS += -DRALINK_CMDLINE
 endif
@@ -301,10 +312,24 @@ endif
 
 ifeq ($(RALINK_OHCI),ON)
 CPPFLAGS += -DRALINK_USB -DRALINK_OHCI
+RALINK_USB = ON
 endif
 
 ifeq ($(RALINK_EHCI),ON)
 CPPFLAGS += -DRALINK_USB -DRALINK_EHCI
+RALINK_USB = ON
+endif
+
+ifeq ($(MTK_XHCI),ON)
+CPPFLAGS += -DMTK_USB -DCONFIG_RALINK_MT7621 -DCONFIG_USB_XHCI
+MTK_USB = ON
+# save size for XHCI code
+RALINK_UPGRADE_BY_SERIAL = OFF
+RALINK_RW_RF_REG_FUN = OFF
+endif
+
+ifeq ($(RALINK_UPGRADE_BY_SERIAL),ON)
+CPPFLAGS += -DRALINK_UPGRADE_BY_SERIAL
 endif
 
 ifeq ($(RALINK_SSO_TEST_FUN),ON)
@@ -435,7 +460,6 @@ ifeq ($(MT7621_ASIC_BOARD),y)
 CPPFLAGS += -DMT7621_ASIC_BOARD
 endif
 
-
 ifeq ($(RT3052_FPGA_BOARD),y)
 CPPFLAGS += -DRT3052_FPGA_BOARD
 endif
@@ -506,6 +530,10 @@ endif
 
 ifeq ($(MAC_TO_VITESSE_MODE),y)
 CPPFLAGS += -DMAC_TO_VITESSE_MODE
+endif
+
+ifeq ($(MAC_TO_RTL8367_MODE),y)
+CPPFLAGS += -DMAC_TO_RTL8367_MODE
 endif
 
 ifeq ($(MAC_TO_MT7530_MODE),y)
@@ -724,7 +752,7 @@ CFG_ENV_IS := IN_FLASH
 endif
 endif
 CPPFLAGS += -DCFG_ENV_IS_$(CFG_ENV_IS)
-	
+
 ifdef BUILD_TAG
 CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes \
 	-DBUILD_TAG='"$(BUILD_TAG)"'
@@ -740,17 +768,23 @@ CFLAGS := $(CPPFLAGS) -Wall -Wno-trigraphs
 endif
 endif
 
+CFLAGS += -Wno-unused -Wno-unused-variable -Wno-unused-but-set-variable
+
 AFLAGS_DEBUG := -Wa,-gstabs
 AFLAGS := $(AFLAGS_DEBUG) -D__ASSEMBLY__ $(CPPFLAGS)
 ifeq ($(CONFIG_TINY_UBOOT), y)
 CONFIG_CROSS_COMPILER_PATH = /opt/buildroot-gcc463/usr/bin
-CFLAGS +=-fpic -G0 -mips16 -fomit-frame-pointer -mno-long-calls -DCONFIG_TINY_UBOOT -DCONFIG_MIPS16
+CFLAGS += -fpic -G0 -mips16 -fomit-frame-pointer -mno-long-calls -DCONFIG_TINY_UBOOT -DCONFIG_MIPS16
 AFLAGS += -fpic -mabicalls
 endif
 
+ifeq ($(MT7621_MP),y)
+CFLAGS += -G0 -fomit-frame-pointer -Wno-pointer-sign
+endif
+
 #ifeq ($(MT7621_MP),y)
-#CFLAGS +=-fpic
-#AFLAGS +=-fno-pic
+#CFLAGS += -fpic
+#AFLAGS += -fno-pic
 #endif
 
 LDFLAGS += -Bstatic -T $(LDSCRIPT) -Ttext $(TEXT_BASE) $(PLATFORM_LDFLAGS)

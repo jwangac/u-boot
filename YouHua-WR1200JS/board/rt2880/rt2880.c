@@ -23,11 +23,10 @@
 
 #include <common.h>
 #include <command.h>
+#include <version.h>
 #include <asm/addrspace.h>
 //#include "LzmaDecode.h"
 
-//#define MAX_SDRAM_SIZE	(64*1024*1024)
-//#define MIN_SDRAM_SIZE	(8*1024*1024)
 #define MAX_SDRAM_SIZE	(256*1024*1024)
 #define MIN_SDRAM_SIZE	(8*1024*1024)
 
@@ -37,6 +36,7 @@
 #define MIN_RT2880_SDRAM_SIZE	(32*1024*1024)
 #endif
 
+extern int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
 
 /*
  * Check memory range for valid RAM. A simple memory test determines
@@ -57,8 +57,6 @@ long get_ram_size(volatile long *base, long maxsize)
 		save[i++] = *addr;
 		
 		*addr = ~cnt;
-
-		
 	}
 
 	addr = base;
@@ -66,7 +64,6 @@ long get_ram_size(volatile long *base, long maxsize)
 
 	*addr = 0;
 
-	
 	if ((val = *addr) != 0) {
 		/* Restore the original data before leaving the function.
 		 */
@@ -106,53 +103,40 @@ long get_ram_size(volatile long *base, long maxsize)
 
 long int initdram(int board_type)
 {
-	ulong size, max_size       = MAX_SDRAM_SIZE;
+	ulong size;
 	ulong our_address;
 #ifndef CONFIG_MIPS16
 	asm volatile ("move %0, $25" : "=r" (our_address) :);
 #endif
-	/* Can't probe for RAM size unless we are running from Flash.
-	 */
-#if 0	 
-	#if defined(CFG_RUN_CODE_IN_RAM)
 
-	printf("\n In RAM run \n"); 
-    return MIN_SDRAM_SIZE;
-	#else
-
-	printf("\n In FLASH run \n"); 
-    return MIN_RT2880_SDRAM_SIZE;
-	#endif
-#endif 
-    
 #if defined (RT2880_FPGA_BOARD) || defined (RT2880_ASIC_BOARD)
 	if (PHYSADDR(our_address) < PHYSADDR(PHYS_FLASH_1))
 	{
-	    
-		//return MIN_SDRAM_SIZE;
 		//fixed to 32MB
 		printf("\n In RAM run \n");
 		return MIN_SDRAM_SIZE;
 	}
 #endif
-	 
-
 
 	size = get_ram_size((ulong *)CFG_SDRAM_BASE, MAX_SDRAM_SIZE);
-	if (size > max_size)
+	if (size <= MIN_SDRAM_SIZE)
 	{
-		max_size = size;
-	//	printf("\n Return MAX size!! \n");
-		return max_size;
+		printf("RAM size (0x%08x) too small !!! do_reset\n", size);
+		udelay(100 * 1000);
+		do_reset (NULL, 0, 0, NULL);
 	}
-//	printf("\n Return Real size =%d !! \n",size);
+
+#if defined (ON_BOARD_4096M_DRAM_COMPONENT) 
+	/* Do not use highmem in U-Boot! */
+	size = DRAM_SIZE * 0x100000;
+#endif
+
 	return size;
-	
 }
 
 int checkboard (void)
 {
-	puts ("Board: Ralink APSoC ");
+	printf("Board: %s APSoC ", RLT_MTK_VENDOR_NAME);
 	return 0;
 }
 

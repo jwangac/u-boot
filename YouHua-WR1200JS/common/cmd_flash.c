@@ -125,7 +125,7 @@ flash_fill_sect_ranges (ulong addr_first, ulong addr_last,
 
 		b_end = info->start[0] + info->size - 1;	/* bank end addr */
 		s_end = info->sector_count - 1;			/* last sector   */
-		printf("\n b_end =%08X\n",b_end);
+//		printf("\n b_end =%08X\n",b_end);
 
 		for (sect=0; sect < info->sector_count; ++sect) {
 			ulong end;	/* last address in current sect	*/

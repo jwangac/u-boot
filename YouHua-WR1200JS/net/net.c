@@ -84,9 +84,9 @@
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
 
-#define ARP_TIMEOUT		3		/* Seconds before trying ARP again */
+#define ARP_TIMEOUT		4UL		/* Seconds before trying ARP again */
 #ifndef	CONFIG_NET_RETRY_COUNT
-# define ARP_TIMEOUT_COUNT	8		/* # of timeouts before giving up  */
+# define ARP_TIMEOUT_COUNT	6		/* # of timeouts before giving up  */
 #else
 # define ARP_TIMEOUT_COUNT  (CONFIG_NET_RETRY_COUNT)
 #endif
@@ -186,6 +186,7 @@ uchar 		NetArpWaitPacketBuf[PKTSIZE_ALIGN + PKTALIGN];
 ulong		NetArpWaitTimerStart;
 int		NetArpWaitTry;
 
+
 //===================================================
 /*=======================================*/
 
@@ -196,7 +197,10 @@ extern VALID_BUFFER_STRUCT  rt2880_free_buf_list;
 //kaiker
 extern BUFFER_ELEM *rt2880_free_buf_entry_dequeue(VALID_BUFFER_STRUCT *hdr);
 
-
+extern void TftpdStart(void);
+extern void LED_ALERT_BLINK(void);
+extern void LED_ALERT_OFF(void);
+IPaddr_t TempServerIP=0;
 
 /*=======================================*/
 //===================================================
@@ -279,6 +283,7 @@ NetLoop(proto_t protocol)
 	DECLARE_GLOBAL_DATA_PTR;
 
 	bd_t *bd = gd->bd;
+	int i;
 
 #ifdef CONFIG_NET_MULTI
 	NetRestarted = 0;
@@ -296,7 +301,6 @@ NetLoop(proto_t protocol)
 #endif   
 //
 	if (!NetTxPacket) {
-		int	i;
 		BUFFER_ELEM *buf;
 		/*
 		 *	Setup packet buffers, aligned correctly.
@@ -373,6 +377,18 @@ restart:
 #endif
 		NetServerIP = getenv_IPaddr ("serverip");
 		break;
+
+	case TFTPD:
+		NetCopyIP(&NetOurIP, &bd->bi_ip_addr);
+		NetServerIP = getenv_IPaddr ("serverip");
+		NetOurGatewayIP = getenv_IPaddr ("gatewayip");
+		NetOurSubnetMask= getenv_IPaddr ("netmask");
+#ifdef CONFIG_NET_VLAN
+		NetOurVLAN = getenv_VLAN("vlan");
+		NetOurNativeVLAN = getenv_VLAN("nvlan");
+#endif
+		break;
+
 #if 0
 	case BOOTP:
 	case RARP:
@@ -416,6 +432,10 @@ restart:
 		case TFTP:
 			/* always use ARP to get server ethernet address */
 			TftpStart();
+			break;
+
+		case TFTPD:
+			TftpdStart();
 			break;
 
 #if (CONFIG_COMMANDS & CFG_CMD_DHCP)
@@ -484,7 +504,10 @@ restart:
 	 *	Main packet reception loop.  Loop receiving packets until
 	 *	someone sets `NetQuit'.
 	 */
-	for (;;) {		
+
+	timeDelta = 266000000;
+
+	for (;;) {
 		WATCHDOG_RESET();
 #ifdef CONFIG_SHOW_ACTIVITY
 		{
@@ -515,6 +538,8 @@ restart:
 		 */
 		if (timeHandler && ((get_timer(0) - timeStart) > timeDelta)) {
 			thand_f *x;
+
+			LED_ALERT_BLINK();
 
 #if defined(CONFIG_MII) || (CONFIG_COMMANDS & CFG_CMD_MII)
 #if defined(CFG_FAULT_ECHO_LINK_DOWN) && defined(CONFIG_STATUS_LED) && defined(STATUS_LED_RED)
@@ -554,6 +579,7 @@ restart:
 				sprintf(buf, "%lX", (unsigned long)load_addr);
 				setenv("fileaddr", buf);
 			}
+			LED_ALERT_OFF();
 			eth_halt();
 			return NetBootFileXferSize;
 
@@ -595,7 +621,7 @@ void NetStartAgain (void)
 		return;
 	}
 #ifndef CONFIG_NET_MULTI
-	NetSetTimeout (10 * CFG_HZ, startAgainTimeout);
+	NetSetTimeout (10UL * CFG_HZ, startAgainTimeout);
 	NetSetHandler (startAgainHandler);
 #else	/* !CONFIG_NET_MULTI*/
 	eth_halt ();
@@ -1166,7 +1192,7 @@ NetReceive(volatile uchar * inpkt, int len)
 	{
 		printf("\n en[%d] < ETHER_HDR_SIZE\n",len);
 		return;
-	}	
+	}
 
 #if (CONFIG_COMMANDS & CFG_CMD_CDP)
 	/* keep track if packet is CDP */
@@ -1335,11 +1361,15 @@ NetReceive(volatile uchar * inpkt, int len)
 				(*packetHandler)(0,0,0,0);
 #endif
 
+				/* modify header, and transmit it */
+				memcpy(((Ethernet_t *)NetArpWaitTxPacket)->et_dest, NetArpWaitPacketMAC, 6);
+				(void) eth_send(NetArpWaitTxPacket, NetArpWaitTxPacketSize);
+
 				/* no arp request pending now */
 				NetArpWaitPacketIP = 0;
 				NetArpWaitTxPacketSize = 0;
 				NetArpWaitPacketMAC = NULL;
-
+#if 0
 				/* if Arp response requested by TFTP,
 				 * send "TFTP Read Request" packet 
 				 * immediately */
@@ -1347,6 +1377,7 @@ NetReceive(volatile uchar * inpkt, int len)
 				if(TftpStarted == 1) {
 				    TftpSend ();
 				}
+#endif
 			}
 			return;
 		default:
@@ -1469,6 +1500,7 @@ NetReceive(volatile uchar * inpkt, int len)
 		/*
 		 *	IP header OK.  Pass the packet to the current handler.
 		 */
+		NetCopyIP(&TempServerIP,(void*)&ip->ip_src);/*TempServerIP is used in TFTPD */
 		(*packetHandler)((uchar *)ip +IP_HDR_SIZE,
 						ntohs(ip->udp_dst),
 						ntohs(ip->udp_src),
@@ -1496,6 +1528,7 @@ static int net_check_prereq (proto_t protocol)
 	case NFS:
 #endif
 	case NETCONS:
+	case TFTPD:
 	case TFTP:
 		if (NetServerIP == 0) {
 			puts ("*** ERROR: `serverip' not set\n");

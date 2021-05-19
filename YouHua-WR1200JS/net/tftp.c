@@ -15,7 +15,7 @@
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
 
 #define WELL_KNOWN_PORT	69		/* Well known TFTP port #		*/
-#define TIMEOUT		3		/* Seconds to timeout for a lost pkt	*/
+#define TIMEOUT		3UL		/* Seconds to timeout for a lost pkt	*/
 #ifndef	CONFIG_NET_RETRY_COUNT
 # define TIMEOUT_COUNT	10		/* # of timeouts before giving up  */
 #else
@@ -231,6 +231,8 @@ TftpHandler (uchar * pkt, unsigned dest, unsigned src, unsigned len)
 			TftpBlockWrapOffset += TFTP_BLOCK_SIZE * TFTP_SEQUENCE_SIZE;
 			printf ("\n\t %lu MB reveived\n\t ", TftpBlockWrapOffset>>20);
 		} else {
+			if (TftpBlock == 1)
+				puts ("\n\t ");
 			if (((TftpBlock - 1) % 10) == 0) {
 				puts ("#");
 			} else if ((TftpBlock % (10 * HASHES_PER_LINE)) == 0) {
@@ -317,6 +319,7 @@ TftpTimeout (void)
 	}
 }
 
+extern unsigned char BootType;
 
 void
 TftpStart (void)
@@ -324,7 +327,10 @@ TftpStart (void)
 	TftpStarted=1;
 
 	if (BootFile[0] == '\0') {
-	    sprintf(default_filename, "%s","test.bin");
+	    if (BootType == 9)
+		sprintf(default_filename, "%s","uboot.img");
+	    else
+		sprintf(default_filename, "%s","image.trx");
 	    tftp_filename = default_filename;
 
 		printf ("*** Warning: no boot file name; using '%s'\n",

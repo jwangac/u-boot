@@ -797,6 +797,7 @@ CPLL_DONE:
 LDO_1P8V:
 	li	t2, ~(1<<6)
 	and	t4, t4, t2
+	//ori	t4, t4, 0x3	/* 1P88V */
 	li  t1, RALINK_RGCTRL_BASE+0x10c
 	sw	t4, 0(t1)
 	j	DDRLDO_SOFT_START
@@ -2376,7 +2377,15 @@ tRFCinit:
 1:
 	lw	gp, 0(ra)
 #endif
-	
+#if (TEXT_BASE == 0xBFC00000) || (TEXT_BASE == 0xBF000000) || (TEXT_BASE == 0xBC000000)
+#if defined (CONFIG_DDR_CAL)
+	bal		lock_dcache
+	nop
+	bal		fill_icache
+	nop
+	li		sp, 0x89000000+0x2F00
+#endif	
+#endif	
 	la	t9, board_init_f
 	j	t9
 	nop
@@ -2394,6 +2403,12 @@ tRFCinit:
 	.globl	relocate_code
 	.ent	relocate_code
 relocate_code:
+#if (TEXT_BASE == 0xBFC00000) || (TEXT_BASE == 0xBF000000) || (TEXT_BASE == 0xBC000000)
+#if defined (CONFIG_DDR_CAL)
+	bal		unlock_dcache
+	nop
+#endif
+#endif
 	move	sp, a0		/* Set new stack pointer		*/
 
 	li	t0, CFG_MONITOR_BASE
@@ -2938,3 +2953,95 @@ DDR2_CFG3_TBL:
 DDR2_CFG4_TBL:
 		.word	0x0010080C, 	0x0000000B,		0x0000000B,		0x0000000B
 #endif	
+
+#if (TEXT_BASE == 0xBFC00000) || (TEXT_BASE == 0xBF000000) || (TEXT_BASE == 0xBC000000)
+#if defined (CONFIG_DDR_CAL)
+		/* === lock d$ === */	
+		.globl	lock_dcache
+		.ent	lock_dcache
+lock_dcache:
+		lui	$14, 0x8900		# Get a KSeg0 address for cacheops
+		move	$12, $14
+		li		$10, 4*2
+2:	
+		# Set TagLo registers
+		li	$13, 0x1FFFF800
+		and	$13, $13, $12
+		ori	$13, $13, (0x1<<5)|(0x1<<7)
+		mtc0	$13, $28, 2
+		move	$9, $12
+		li	$15, 64
+		li	$11, 32
+		# Index Store Tag Cache Op
+		# Will invalidate the tag entry, clear the lock bit, and clear the LRF bit
+1:	cache	0x9, 0($9)
+		add	$15, -1			# Decrement set counter
+		bne	$15, $0, 1b
+		add	$9, $11		# Get next line address
+				
+		addiu	$12, 0x800
+		li  $13, 0x1FFFF800
+		and $13, $13, $12
+		ori $13, $13, (0x1<<5)|(0x1<<7)
+		mtc0    $13, $28, 2
+
+		subu	$10, 1
+		bgtz	$10, 2b
+		nop
+		jr		ra
+		nop
+		jr		ra
+		nop
+		.end	lock_dcache
+		
+		/* === unlock d$ === */	
+		.globl	unlock_dcache
+		.ent	unlock_dcache
+unlock_dcache:
+		lui	$14, 0x8000		# Get a KSeg0 address for cacheops
+		move	$12, $14
+		li		$10, 4*2
+2:	
+		# Clear TagLo/TagHi registers
+		mtc0	$0, $28, 2
+		move	$9, $12
+		li	$15, 64
+		li	$11, 32
+		# Index Store Tag Cache Op
+		# Will invalidate the tag entry, clear the lock bit, and clear the LRF bit
+1:	cache	0x9, 0($9)
+		add	$15, -1			# Decrement set counter
+		bne	$15, $0, 1b
+		add	$9, $11		# Get next line address		
+		
+		subu	$10, 1
+		bgtz	$10, 2b
+		nop
+		jr		ra
+		nop
+		
+		.end	unlock_dcache
+
+		/* === fill I$ === */			
+		.globl	fill_icache
+		.ent	fill_icache
+fill_icache:
+		lui		$14, %hi(dram_cali)		# Get a KSeg0 address for cacheops
+		addiu	$14, %lo(dram_cali)
+
+		li	$13, 0xDFFFFFFF
+		and	$13, $13, $14
+		li	$15, 512
+		li	$11, 32
+		# Fill Cache Op
+1:	cache	0x14, 0($13)
+		add	$15, -1			# Decrement set counter
+		nop
+		bne	$15, $0, 1b
+		add	$13, $11		# Get next line address		
+
+		jr		ra
+		nop
+		.end	fill_icache
+#endif
+#endif

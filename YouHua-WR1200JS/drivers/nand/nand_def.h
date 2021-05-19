@@ -109,7 +109,7 @@ do {	\
 #define NUM_PARTITIONS 				1
 #endif
 
-#define NFI_DEFAULT_ACCESS_TIMING        (0x30C77fff)	//(0x44333)
+#define NFI_DEFAULT_ACCESS_TIMING        (0x00844333)
 
 //uboot only support 1 cs
 #define NFI_CS_NUM                  (1)

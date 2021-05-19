@@ -115,6 +115,8 @@ static void multi_erase_cmd(struct mtd_info *mtd, int page)
 	chip->cmdfunc(mtd, NAND_CMD_ERASE1, -1, page);
 	chip->cmdfunc(mtd, NAND_CMD_ERASE2, -1, -1);
 }
+
+#if 0
 /*
  * Get the flash and manufacturer id and lookup if the type is supported
  */
@@ -297,7 +299,7 @@ int nand_scan_ident(struct mtd_info *mtd, int maxchips)
 
 	return 0;
 }
-
+#endif
 
 /**
  * nand_scan_tail - [NAND Interface] Scan for the NAND device
@@ -467,7 +469,6 @@ int nand_scan_tail(struct mtd_info *mtd)
 #endif
 	/* Initialize state */
 	chip->state = FL_READY;
-	printf("select_chip\n");
 	/* De-select the device */
 	chip->select_chip(mtd, -1);
 
@@ -505,7 +506,7 @@ int nand_scan_tail(struct mtd_info *mtd)
 	return chip->scan_bbt(mtd);
 }
 
-
+#if 0
 /**
  * nand_scan - [NAND Interface] Scan for the NAND device
  * @mtd:	MTD device structure
@@ -533,6 +534,7 @@ int nand_scan(struct mtd_info *mtd, int maxchips)
 		ret = nand_scan_tail(mtd);
 	return ret;
 }
+#endif
 
 /**
  * nand_release_device - [GENERIC] release chip

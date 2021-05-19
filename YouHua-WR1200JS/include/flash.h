@@ -76,6 +76,7 @@ typedef struct {
 /* Prototypes */
 
 extern unsigned long flash_init (void);
+extern int flash_env_init(void);
 extern void flash_print_info (flash_info_t *);
 extern int flash_erase	(flash_info_t *, int, int);
 extern int erase_all_chip(flash_info_t *, int, int);

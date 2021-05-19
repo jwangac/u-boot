@@ -161,7 +161,7 @@ netboot_common (int proto, cmd_tbl_t *cmdtp, int argc, char *argv[])
 	int   size;
 
 
-		printf("\n netboot_common, argc= %d \n", argc);
+//		printf("\n netboot_common, argc= %d \n", argc);
 	/* pre-set load_addr */
 	if ((s = getenv("loadaddr")) != NULL) {
 		load_addr = simple_strtoul(s, NULL, 16);
@@ -196,7 +196,7 @@ netboot_common (int proto, cmd_tbl_t *cmdtp, int argc, char *argv[])
 
 	if ((size = NetLoop(proto)) < 0)
 		return 1;
-   printf("NetBootFileXferSize= %08x\n", size);
+	printf("LoadAddr=%x NetBootFileXferSize=%08x\n", load_addr, size);
    
 	/* NetLoop ok, update environment */
 #if (CONFIG_COMMANDS & CFG_CMD_ENV)
@@ -282,14 +282,18 @@ static void cdp_update_env(void)
 		printf("CDP offered appliance VLAN %d\n", ntohs(CDPApplianceVLAN));
 		VLAN_to_string(CDPApplianceVLAN, tmp);
 		setenv("vlan", tmp);
+#ifdef CONFIG_NET_VLAN
 		NetOurVLAN = CDPApplianceVLAN;
+#endif
 	}
 
 	if (CDPNativeVLAN != htons(-1)) {
 		printf("CDP offered native VLAN %d\n", ntohs(CDPNativeVLAN));
 		VLAN_to_string(CDPNativeVLAN, tmp);
 		setenv("nvlan", tmp);
+#ifdef CONFIG_NET_VLAN
 		NetOurNativeVLAN = CDPNativeVLAN;
+#endif
 	}
 
 }

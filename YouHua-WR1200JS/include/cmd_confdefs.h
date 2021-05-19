@@ -96,6 +96,7 @@
 #define CFG_CMD_XIMG	0x0400000000000000ULL	/* Load part of Multi Image	*/
 #define CFG_CMD_UNIVERSE 0x0800000000000000ULL	/* Tundra Universe Support      */
 #define CFG_CMD_EXT2    0x1000000000000000ULL	/* EXT2 Support                 */
+#define CFG_CMD_TFTPSERVER 0x2000000000000000ULL/* TftpServer                   */
 
 #define CFG_CMD_ALL	0xFFFFFFFFFFFFFFFFULL	/* ALL commands			*/
 
@@ -123,6 +124,7 @@
 			CFG_CMD_FAT	| \
 			CFG_CMD_FDOS	| \
 			CFG_CMD_HWFLOW	| \
+			CFG_CMD_I2C	| \
 			CFG_CMD_IDE	| \
 			CFG_CMD_IMLS	| \
 			CFG_CMD_IMMAP	| \
@@ -155,7 +157,7 @@
 #define CONFIG_COMMANDS (CONFIG_CMD_DFL)
 
 /* USB appliance */
-#ifdef RALINK_USB
+#if defined (RALINK_USB) || defined (MTK_USB)
 #undef  CONFIG_COMMANDS
 #define CONFIG_COMMANDS (CONFIG_CMD_DFL | CFG_CMD_USB | CFG_CMD_FAT)
 #endif

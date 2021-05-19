@@ -18,6 +18,7 @@
  * MA 02111-1307 USA
  */
 #include <common.h>
+#include <version.h>
 #include <usb.h>
 
 #include <rt_mmap.h>
@@ -25,36 +26,60 @@
 #include "ehci.h"
 #include "ehci-core.h"
 
+#define USB0_HOST_MODE 0x400
 
 /*
  * enter power saving mode
  */
-void leave_power_saving(void)
+static void enter_power_saving(void)
 {
-        u32 val;
+	u32 val;
 
-        val = RALINK_REG(RT2880_RSTCTRL_REG);    // toggle host & device RST bit
-        val = val & ~(RALINK_UHST_RST | RALINK_UDEV_RST);
-        RALINK_REG(RT2880_RSTCTRL_REG) = val;
+	val = RALINK_REG(RT2880_RSTCTRL_REG);    // toggle host & device RST bit
+	val |= (RALINK_UHST_RST | RALINK_UDEV_RST);
+	RALINK_REG(RT2880_RSTCTRL_REG) = val;
 
-        val = RALINK_REG(RT2880_CLKCFG1_REG);
+	mdelay(10);
+
+	val = RALINK_REG(RT2880_CLKCFG1_REG);
 #if defined(RT5350_ASIC_BOARD)
-        val = val | (RALINK_UPHY0_CLK_EN) ;  // disable USB port0 PHY.
+	val &= ~(RALINK_UPHY0_CLK_EN);
 #else
-        val = val | RALINK_UPHY0_CLK_EN | RALINK_UPHY1_CLK_EN ;  // disable USB port0 & port1 PHY.
+	val &= ~(RALINK_UPHY0_CLK_EN | RALINK_UPHY1_CLK_EN);
 #endif
-        RALINK_REG(RT2880_CLKCFG1_REG) = val;
+	RALINK_REG(RT2880_CLKCFG1_REG) = val;
+
+	mdelay(1);
 }
 
-
-#define USB0_HOST_MODE 0x400
-
-static int rt_set_host(void)
+/*
+ * leave power saving mode
+ */
+static void leave_power_saving(void)
 {
-	u32 val = RALINK_REG(RT2880_SYSCFG1_REG);
-	// host mode
+	u32 val;
+
+	val = RALINK_REG(RT2880_CLKCFG1_REG);
+#if defined(RT5350_ASIC_BOARD)
+	val |= (RALINK_UPHY0_CLK_EN);
+#else
+	val |= (RALINK_UPHY0_CLK_EN | RALINK_UPHY1_CLK_EN);
+#endif
+	RALINK_REG(RT2880_CLKCFG1_REG) = val;
+
+	mdelay(10);
+
+	val = RALINK_REG(RT2880_SYSCFG1_REG);
 	val |= USB0_HOST_MODE;
 	RALINK_REG(RT2880_SYSCFG1_REG) = val;
+
+	mdelay(1);
+
+	val = RALINK_REG(RT2880_RSTCTRL_REG);    // toggle host & device RST bit
+	val &= ~(RALINK_UHST_RST | RALINK_UDEV_RST);
+	RALINK_REG(RT2880_RSTCTRL_REG) = val;
+
+	mdelay(100);
 }
 
 /*
@@ -63,19 +88,19 @@ static int rt_set_host(void)
  */
 int ehci_hcd_init(void)
 {
-#if defined(RT3352_ASIC_BOARD) || defined(RT3883_ASIC_BOARD) || defined(RT5350_ASIC_BOARD) || defined(MT7620_ASIC_BOARD)
+#if defined(RT3352_ASIC_BOARD) || defined(RT3883_ASIC_BOARD) || defined(RT5350_ASIC_BOARD) || \
+    defined(MT7620_ASIC_BOARD) || defined(MT7628_ASIC_BOARD)
+	printf("* ehci_hcd_init *\n");
 	leave_power_saving();
-	mdelay(100);
-
-	rt_set_host();
-	mdelay(100);
 
 	hccr = (struct ehci_hccr *)(0xb01c0000);
 	hcor = (struct ehci_hcor *)((uint32_t) hccr + HC_LENGTH(ehci_readl(&hccr->cr_capbase)));
 
-	printf("Mediatek/Ralink USB EHCI host init hccr %x and hcor %x hc_length %d\n", (uint32_t)hccr, (uint32_t)hcor, (uint32_t)HC_LENGTH(ehci_readl(&hccr->cr_capbase)));
+	printf("%s USB EHCI host init, hccr %x, hcor %x, hc_length %d\n", 
+		RLT_MTK_VENDOR_NAME, (uint32_t)hccr, (uint32_t)hcor, (uint32_t)HC_LENGTH(ehci_readl(&hccr->cr_capbase)));
 	return 0;
 #else
+	
 	return -1;
 #endif
 }
@@ -86,5 +111,7 @@ int ehci_hcd_init(void)
  */
 int ehci_hcd_stop(void)
 {
+	enter_power_saving();
+
 	return 0;
 }

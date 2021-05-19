@@ -427,7 +427,7 @@ typedef struct
    u16 pagesize;
    u16 sparesize;
    u32 timmingsetting;
-   char devciename[14];
+   char devicename[16];
    u32 advancedmode;   //
 }flashdev_info,*pflashdev_info;
 

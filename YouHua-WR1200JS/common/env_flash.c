@@ -258,24 +258,34 @@ Done:
 
 #else /* ! CFG_ENV_ADDR_REDUND */
 
-int  env_init(void)
+int env_init(void)
 {
 	DECLARE_GLOBAL_DATA_PTR;
+
+	gd->env_addr  = (ulong)&default_environment[0];
+	gd->env_valid = 0;
+	return (0);
+}
+
+int flash_env_init(void)
+{
+	DECLARE_GLOBAL_DATA_PTR;
+
 #ifdef CONFIG_OMAP2420H4
 	int flash_probe(void);
 
 	if(flash_probe() == 0)
 		goto bad_flash;
 #endif
+
 #ifdef CMD_SAVEENV
-	if (crc32(0, env_ptr->data, (0x1000-4)) == env_ptr->crc) { // Roger test
-	//if (crc32(0, env_ptr->data, ENV_SIZE) == env_ptr->crc) {
+	if (crc32(0, env_ptr->data, ENV_SIZE) == env_ptr->crc) {
 		gd->env_addr  = (ulong)&(env_ptr->data);
 		gd->env_valid = 1;
 		return(0);
-	}	
+	}
 #endif
-	
+
 #ifdef CONFIG_OMAP2420H4
 bad_flash:
 #endif
@@ -299,7 +309,7 @@ int saveenv(void)
 #endif	/* CFG_ENV_SECT_SIZE */
 	int rcode = 0;
 
-   printf("File: %s, Func: %s, Line: %d\n", __FILE__,__FUNCTION__ , __LINE__);
+	//printf("File: %s, Func: %s, Line: %d\n", __FILE__,__FUNCTION__ , __LINE__);
 
 #if defined(CFG_ENV_SECT_SIZE) && (CFG_ENV_SECT_SIZE > CFG_ENV_SIZE)
 

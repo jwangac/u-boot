@@ -207,7 +207,7 @@ typedef struct dram_header {
 		}sdr;
 	};
 #endif
-} dram_header_t __attribute__ ((packed));
+} dram_header_t;
 
 typedef struct  nand_badblock_info1_type {
 	uint32_t	ecc_bits	:	3;
@@ -215,7 +215,7 @@ typedef struct  nand_badblock_info1_type {
 	uint32_t	ecc_offset	:	8;
 	uint32_t	bad_block_offser	:	8;
 	uint32_t	checksum	:	8;
-} nand_badblock_info1_t __attribute__ ((packed));
+} nand_badblock_info1_t;
 
 typedef struct  nand_info_1_type {	
 	uint32_t	pagesize 	: 2;
@@ -229,7 +229,7 @@ typedef struct  nand_info_1_type {
 	uint32_t	block_size	: 2;
 	uint32_t	rsvd4		: 2;	
 	uint32_t	magic_id	: 12;	
-} nand_info_1_t __attribute__ ((packed));
+} nand_info_1_t;
 
 	
 typedef struct nand_header {
@@ -243,7 +243,7 @@ typedef struct nand_header {
 	};
 	//nand_badblock_info1_t	nand_badblock_info1;
 	uint32_t				crc;
-} nand_header_t __attribute__ ((packed));
+} nand_header_t;
 
 typedef struct image_header {
 	uint32_t	ih_magic;	/* Image Header Magic Number	*/
@@ -263,7 +263,7 @@ typedef struct image_header {
 #else
 	dram_header_t   ih_dram;
 #endif	
-} image_header_t __attribute__((packed));
+} image_header_t;
 
 
 #endif	/* __IMAGE_H__ */

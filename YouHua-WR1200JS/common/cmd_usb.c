@@ -153,7 +153,7 @@ void usb_display_string(struct usb_device *dev,int index)
 void usb_display_desc(struct usb_device *dev)
 {
 	if (dev->descriptor.bDescriptorType==USB_DT_DEVICE) {
-		printf("%d: %s,  USB Revision %x.%x\n",dev->devnum,usb_get_class_desc(dev->config.if_desc[0].bInterfaceClass),
+		printf("%d: %s,  USB Revision %x.%x\n",dev->devnum,usb_get_class_desc(dev->config.if_desc[0].desc.bInterfaceClass),
 			(dev->descriptor.bcdUSB>>8) & 0xff,dev->descriptor.bcdUSB & 0xff);
 		if (strlen(dev->mf) || strlen(dev->prod) || strlen(dev->serial))
 			printf(" - %s %s %s\n",dev->mf,dev->prod,dev->serial);
@@ -163,7 +163,7 @@ void usb_display_desc(struct usb_device *dev)
 			printf("\n");
 		}
 		else {
-			printf(" - Class: (from Interface) %s\n",usb_get_class_desc(dev->config.if_desc[0].bInterfaceClass));
+			printf(" - Class: (from Interface) %s\n",usb_get_class_desc(dev->config.if_desc[0].desc.bInterfaceClass));
 		}
 		printf(" - PacketSize: %d  Configurations: %d\n",dev->descriptor.bMaxPacketSize0,dev->descriptor.bNumConfigurations);
 		printf(" - Vendor: 0x%04x  Product 0x%04x Version %d.%d\n",dev->descriptor.idVendor,dev->descriptor.idProduct,(dev->descriptor.bcdDevice>>8) & 0xff,dev->descriptor.bcdDevice & 0xff);
@@ -175,7 +175,7 @@ void usb_display_conf_desc(struct usb_config_descriptor *config,struct usb_devic
 {
 	printf("   Configuration: %d\n",config->bConfigurationValue);
 	printf("   - Interfaces: %d %s%s%dmA\n",config->bNumInterfaces,(config->bmAttributes & 0x40) ? "Self Powered " : "Bus Powered ",
-	(config->bmAttributes & 0x20) ? "Remote Wakeup " : "",config->MaxPower*2);
+	(config->bmAttributes & 0x20) ? "Remote Wakeup " : "",config->bMaxPower*2);
 	if (config->iConfiguration) {
 		printf("   - ");
 		usb_display_string(dev,config->iConfiguration);
@@ -216,18 +216,18 @@ void usb_display_ep_desc(struct usb_endpoint_descriptor *epdesc)
 /* main routine to diasplay the configs, interfaces and endpoints */
 void usb_display_config(struct usb_device *dev)
 {
-	struct usb_config_descriptor *config;
-	struct usb_interface_descriptor *ifdesc;
+	struct usb_config *config;
+	struct usb_interface *ifdesc;
 	struct usb_endpoint_descriptor *epdesc;
-	int i,ii;
+	int i, ii;
 
-	config= &dev->config;
-	usb_display_conf_desc(config,dev);
-	for(i=0;i<config->no_of_if;i++) {
-		ifdesc= &config->if_desc[i];
-		usb_display_if_desc(ifdesc,dev);
-		for(ii=0;ii<ifdesc->no_of_ep;ii++) {
-			epdesc= &ifdesc->ep_desc[ii];
+	config = &dev->config;
+	usb_display_conf_desc(&config->desc, dev);
+	for (i = 0; i < config->no_of_if; i++) {
+		ifdesc = &config->if_desc[i];
+	usb_display_if_desc(&ifdesc->desc, dev);
+		for (ii = 0; ii < ifdesc->no_of_ep; ii++) {
+			epdesc = &ifdesc->ep_desc[ii];
 			usb_display_ep_desc(epdesc);
 		}
 	}
@@ -236,14 +236,25 @@ void usb_display_config(struct usb_device *dev)
 
 static inline char *portspeed(int speed)
 {
-    if (speed == USB_SPEED_HIGH)
-        return "480 Mb/s";
-    else if (speed == USB_SPEED_LOW)
-        return "1.5 Mb/s";
-    else
-        return "12 Mb/s";
-}
+	char *speed_str;
 
+	switch (speed) {
+	case USB_SPEED_SUPER:
+		speed_str = "5 Gb/s";
+		break;
+	case USB_SPEED_HIGH:
+		speed_str = "480 Mb/s";
+		break;
+	case USB_SPEED_LOW:
+		speed_str = "1.5 Mb/s";
+		break;
+	default:
+		speed_str = "12 Mb/s";
+		break;
+	}
+
+	return speed_str;
+}
 
 /* shows the device tree recursively */
 void usb_show_tree_graph(struct usb_device *dev,char *pre)
@@ -288,8 +299,8 @@ void usb_show_tree_graph(struct usb_device *dev,char *pre)
 	pre[index++]=' ';
 	pre[index++]= has_child ? '|' : ' ';
 	pre[index]=0;
-	printf(" %s (%s, %dmA)\n",usb_get_class_desc(dev->config.if_desc[0].bInterfaceClass),
-		portspeed(dev->speed),dev->config.MaxPower * 2);
+	printf(" %s (%s, %dmA)\n",usb_get_class_desc(dev->config.if_desc[0].desc.bInterfaceClass),
+		portspeed(dev->speed),dev->config.desc.bMaxPower * 2);
 	if (strlen(dev->mf) ||
 	   strlen(dev->prod) ||
 	   strlen(dev->serial))
@@ -321,6 +332,8 @@ void usb_show_tree(struct usb_device *dev)
 #ifdef CONFIG_USB_STORAGE
 int do_usbboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
+	DECLARE_GLOBAL_DATA_PTR;
+
 	char *boot_device = NULL;
 	char *ep;
 	int dev, part=1, rcode;
@@ -452,15 +465,13 @@ int do_usbboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
  */
 int do_usb (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-
 	int i;
 	struct usb_device *dev = NULL;
 #ifdef CONFIG_USB_STORAGE
 	block_dev_desc_t *stor_dev;
 #endif
 
-	if ((strncmp(argv[1], "reset", 5) == 0) ||
-		 (strncmp(argv[1], "start", 5) == 0)){
+	if ((strncmp(argv[1], "reset", 5) == 0) || (strncmp(argv[1], "start", 5) == 0)){
 		usb_stop();
 		printf("(Re)start USB...\n");
 		i = usb_init();
@@ -651,3 +662,4 @@ U_BOOT_CMD(
 );
 #endif
 #endif
+

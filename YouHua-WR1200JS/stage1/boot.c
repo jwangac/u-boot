@@ -14,7 +14,7 @@ int spi_read(uint32_t dst, uint32_t src_off, uint32_t size);
 
 void udelay(unsigned long usec)
 {
-#define MIPS_CPU_FREQ_US (320)
+#define MIPS_CPU_FREQ_US (500)
 	volatile register unsigned long count = (usec * MIPS_CPU_FREQ_US);
 
 	asm volatile (".set noreorder \n"

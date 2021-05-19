@@ -92,28 +92,26 @@ extern unsigned int  CFG_BLOCKSIZE;
 
 #define SERIAL_CLOCK_DIVISOR 16
 
-#define CONFIG_BOOTDELAY	5	/* autoboot after 5 seconds	*/
+#if defined (CONFIG_BAUDRATE_57600)
+#define CONFIG_BAUDRATE		57600
+#else
+#define CONFIG_BAUDRATE		115200	/* 115200 by default */
+#endif
 
-#define CONFIG_BAUDRATE		115200
+#define CONFIG_BOOTDELAY	1	/* autoboot after 1 seconds	*/
 
 #define CONFIG_SERVERIP 192.168.1.2
 #define CONFIG_IPADDR 192.168.1.1
-#define CONFIG_ETHADDR "00:AA:BB:CC:DD:10"
+#define CONFIG_ETHADDR "00:0C:43:30:52:11"
 /* valid baudrates */
 #define CFG_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 //#define	CONFIG_TIMESTAMP		/* Print image info with timestamp */
 
-#undef  CONFIG_BOOTARGS
+#undef	CONFIG_BOOTARGS
 
 #define CONFIG_BOOTCOMMAND	"tftp" //"run flash_self"
 
-#define CONFIG_FACTORY_RESET
-#define CONFIG_FACTORY_RESET_TIME 3
-#if defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD)
-#define RALINK_REG_PIODATA (RALINK_PIO_BASE + 0x20)
-#define RALINK_REG_PIODIR (RALINK_PIO_BASE + 0x00)
-#endif
 
 #include <cmd_confdefs.h>
 
@@ -172,15 +170,13 @@ extern unsigned int  CFG_BLOCKSIZE;
  * for TEST 
  */
 #define CFG_CONSOLE_INFO_QUIET	
+#define	CFG_LOAD_ADDR		(CFG_SDRAM_BASE + (gd->ram_size)/2)	/* default load address	*/
 
 #if defined (RT2880_FPGA_BOARD) || defined (RT2880_ASIC_BOARD)
-#define	CFG_LOAD_ADDR		0x8A100000	/* default load address	*/
 #define CFG_HTTP_DL_ADDR	0x8A300000
-
 #define CFG_MEMTEST_START	0x8A100000
 #define CFG_MEMTEST_END		0x8A400000
 #else
-#define	CFG_LOAD_ADDR		0x80100000	/* default load address	*/
 #define CFG_HTTP_DL_ADDR	0x80300000
 #if defined(RT6855A_FPGA_BOARD) || defined(RT6855A_ASIC_BOARD) || defined(MT7620_FPGA_BOARD) || defined(MT7620_ASIC_BOARD) || defined(MT7628_FPGA_BOARD) || defined(MT7628_ASIC_BOARD)
 #define CFG_SPINAND_LOAD_ADDR	0x80c00000
@@ -245,6 +241,7 @@ extern unsigned int  CFG_BLOCKSIZE;
       defined (RT5350_FPGA_BOARD) || defined (RT5350_ASIC_BOARD) || \
       defined (RT6855_FPGA_BOARD) || defined (RT6855_ASIC_BOARD) || \
       defined (MT7620_FPGA_BOARD) || defined (MT7620_ASIC_BOARD) || \
+      defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD) || \
       defined (MT7628_FPGA_BOARD) || defined (MT7628_ASIC_BOARD)
 #define PHYS_FLASH_START	0xBC000000 /* Flash Bank #2 */
 #define PHYS_FLASH_1		0xBC000000 /* Flash Bank #1 */
@@ -326,22 +323,21 @@ extern unsigned int  CFG_BLOCKSIZE;
 #define CFG_KERN_ADDR		(CFG_FLASH_BASE + CFG_BOOTLOADER_SIZE)
 #define CFG_KERN2_ADDR		(CFG_FLASH2_BASE + CFG_BOOTLOADER_SIZE)
 #else
-#if defined(SMALL_UBOOT_PARTITION)
+#if defined(MTK_NAND) || defined (CFG_ENV_IS_IN_NAND)
+#define CFG_BOOTLOADER_SIZE	(CFG_BLOCKSIZE*NAND_BLK_BOOTLOADER)	// 4x blocks ( 512K)
+#define CFG_CONFIG_SIZE		(CFG_BLOCKSIZE*NAND_BLK_CONFIG)		//10x blocks (1280K)
+#define CFG_FACTORY_SIZE	(CFG_BLOCKSIZE*NAND_BLK_FACTORY)	// 2x blocks ( 256K), kernel start from 0x200000
+#define CFG_NVRAM_SIZE		(CFG_BLOCKSIZE*NAND_BLK_NVRAM)		// 8x blocks (1024K)
+#define CFG_NVRAM_ADDR		(CFG_FLASH_BASE + (CFG_BLOCKSIZE*NAND_OFS_NVRAM))
+#elif defined(SMALL_UBOOT_PARTITION)
 #define CFG_BOOTLOADER_SIZE	0x20000
 #define CFG_CONFIG_SIZE		0x10000
 #define CFG_FACTORY_SIZE	0x00000
-#else
-#if defined(MTK_NAND) || defined (CFG_ENV_IS_IN_NAND)
-#define CFG_BOOTLOADER_SIZE	(CFG_BLOCKSIZE<<2)
-#define CFG_CONFIG_SIZE		(CFG_BLOCKSIZE<<2)
-#define CFG_FACTORY_SIZE	(CFG_BLOCKSIZE<<1)
 #else
 #define CFG_BOOTLOADER_SIZE	0x30000
 #define CFG_CONFIG_SIZE		0x10000
 #define CFG_FACTORY_SIZE	0x10000
 #endif
-#endif
-
 #define CFG_ENV_ADDR		(CFG_FLASH_BASE + CFG_BOOTLOADER_SIZE)
 #define CFG_FACTORY_ADDR	(CFG_FLASH_BASE + CFG_BOOTLOADER_SIZE + CFG_CONFIG_SIZE)
 #define CFG_KERN_ADDR		(CFG_FLASH_BASE + (CFG_BOOTLOADER_SIZE + CFG_CONFIG_SIZE + CFG_FACTORY_SIZE))
@@ -385,6 +381,16 @@ extern unsigned int  CFG_BLOCKSIZE;
 #endif
 #endif
 
+
+#define LINUX_FILE_SIZE_MIN	0x80000
+#define UBOOT_FILE_SIZE_MIN	0x8000	/* for prevent flash damaged Uboot */
+#if defined(SMALL_UBOOT_PARTITION)
+#define UBOOT_FILE_SIZE_MAX	CFG_UBOOT_SIZE
+#else
+#define UBOOT_FILE_SIZE_MAX	CFG_BOOTLOADER_SIZE
+#endif
+
+
 #define CONFIG_FLASH_16BIT
 
 #define CONFIG_NR_DRAM_BANKS	1
@@ -426,6 +432,7 @@ extern unsigned int  CFG_BLOCKSIZE;
 #define RT2880_SYSCLKCFG_REG			(RT2880_SYS_CNTL_BASE+0x3c)
 #if defined (MT7628_ASIC_BOARD)
 #define RT2880_AGPIOCFG_REG			(RT2880_SYS_CNTL_BASE+0x3c)
+#define RT2880_GPIOMODE2_REG			(RT2880_SYS_CNTL_BASE+0x64)
 #endif
 #define RT2880_GPIOMODE_REG			(RT2880_SYS_CNTL_BASE+0x60)
 #endif
@@ -442,15 +449,16 @@ extern unsigned int  CFG_BLOCKSIZE;
 #define RT2880_REG_PIOSET       (RT2880_PRGIO_ADDR + 0x30)
 #define RT2880_REG_PIORESET     (RT2880_PRGIO_ADDR + 0x40)
 #else
-#define RT2880_REG_PIOINT       (RT2880_PRGIO_ADDR + 0)
+#define RT2880_REG_PIOINT       (RT2880_PRGIO_ADDR + 0x00)
 #define RT2880_REG_PIOEDGE      (RT2880_PRGIO_ADDR + 0x04)
 #define RT2880_REG_PIORENA      (RT2880_PRGIO_ADDR + 0x08)
 #define RT2880_REG_PIOFENA      (RT2880_PRGIO_ADDR + 0x0C)
 #define RT2880_REG_PIODATA      (RT2880_PRGIO_ADDR + 0x20)
 #define RT2880_REG_PIODIR       (RT2880_PRGIO_ADDR + 0x24)
-#define RT2880_REG_PIOSET       (RT2880_PRGIO_ADDR + 0x30)
-#define RT2880_REG_PIORESET     (RT2880_PRGIO_ADDR + 0x40)
+#define RT2880_REG_PIOSET       (RT2880_PRGIO_ADDR + 0x2c)
+#define RT2880_REG_PIORESET     (RT2880_PRGIO_ADDR + 0x30)
 #endif
+
 #define RALINK_REG(x)		(*((volatile u32 *)(x)))	
 #if defined (RT6855A_FPGA_BOARD) || defined (RT6855A_ASIC_BOARD) || \
     defined (MT7621_FPGA_BOARD) || defined (MT7621_ASIC_BOARD) || defined (MT7628_FPGA_BOARD) || defined (MT7628_ASIC_BOARD)
@@ -477,20 +485,34 @@ extern unsigned int  CFG_BLOCKSIZE;
 /*
 * for USB
 */
-#ifdef RALINK_USB
+#if defined (RALINK_USB) || defined (MTK_USB)
+#ifdef CONFIG_RALINK_MT7621
+#define CONFIG_USB_STORAGE    1
+#define CONFIG_DOS_PARTITION	1
+#define LITTLEENDIAN
+#define CONFIG_CRC32_VERIFY
+#define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS	3
+#else
 #define CONFIG_USB_OHCI		1
 #define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS	2
 #define CONFIG_SYS_USB_OHCI_REGS_BASE		0x101C1000
 #define CONFIG_SYS_USB_OHCI_SLOT_NAME		"rt3680"
 #define CONFIG_USB_EHCI		1
 #define CONFIG_USB_STORAGE    1
-#define CONFIG_DOS_PARTITION
+#define CONFIG_DOS_PARTITION	1
 #define LITTLEENDIAN
 #define CONFIG_CRC32_VERIFY
+#endif
 #endif /* RALINK_USB */
 
 #if defined (MT7621_ASIC_BOARD) || defined (MT7621_FPGA_BOARD)
 //#define USE_PIO_DBG		1
+#endif
+
+#if defined(MT7628_ASIC_BOARD)
+#define PHY_BASE                0xB0120000
+#define SIFSLV_FM_FEG_BASE      (PHY_BASE+0xf00)
+#define U2_PHY_BASE             (PHY_BASE+0x800)
 #endif
 
 #endif	/* __CONFIG_H */

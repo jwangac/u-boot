@@ -5,7 +5,7 @@ This repository contains the U-Boot source code for several routers. Pre-built
 binaries are provided too.
 
 The source code were taken and modified from the GPL archives released by
-Netgear and Ubiquiti Networks.
+Netgear, Ubiquiti Networks, and padavan/rt-n56u.
 
 Devices
 =======
