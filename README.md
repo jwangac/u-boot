@@ -16,7 +16,7 @@ Devices
 | [Netgear WNDR3800](Netgear-WNDR3800/Netgear-WNDR3800.bin?raw=true) | Yes | Yes | Yes |
 | [Phicomm K2P](Phicomm-K2P/Phicomm-K2P.bin?raw=true) | No<sup>2</sup> | Yes | Yes |
 | [Xzwifi CreativeBox](Xzwifi-CreativeBox/Xzwifi-CreativeBox.bin?raw=true) | No<sup>2</sup> | Yes, but untested | Yes |
-| [YouHua WR1200JS](YouHua-WR1200JS/YouHua-WR1200JS.bin?raw=true) | No<sup>2</sup> | Yes, but untested | Yes |
+| [YouHua WR1200JS](YouHua-WR1200JS/YouHua-WR1200JS.bin?raw=true) | Yes | Unknown | Unknown |
 | [ZBT WE1326](ZBT-WE1326/ZBT-WE1326.bin?raw=true) | No<sup>2</sup> | Yes | No |
 | [ZTE Q7](ZTE-Q7/ZTE-Q7.bin?raw=true) | No<sup>2</sup> | Yes | No |
 
